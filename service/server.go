@@ -1,16 +1,16 @@
 package service
 
-type Message struct {
+type message struct {
 	client  *client
 	content []byte
 }
 
-type Server struct {
+type server struct {
 	// 已注册的客户
 	clients map[*client]bool
 
 	// 来自客户的消息
-	broadcast chan *Message
+	broadcast chan *message
 
 	// 待注册的客户
 	register chan *client
@@ -18,7 +18,8 @@ type Server struct {
 	unregister chan *client
 }
 
-func (s *Server) watch() {
+// 监听
+func (s *server) watch() {
 	for {
 		select {
 
@@ -42,10 +43,11 @@ func (s *Server) watch() {
 	}
 }
 
-func newServer() *Server {
-	return &Server{
+// 获得 server 实例
+func newServer() *server {
+	return &server{
 		clients:    make(map[*client]bool),
-		broadcast:  make(chan *Message),
+		broadcast:  make(chan *message),
 		register:   make(chan *client),
 		unregister: make(chan *client),
 	}

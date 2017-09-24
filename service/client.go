@@ -29,11 +29,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type client struct {
-	ser  *Server         // 客户所属 server
+	ser  *server         // 客户所属 server
 	conn *websocket.Conn // 客户 ws 连接
 	send chan []byte     // 待发送数据
 }
 
+// 读事件
 func (c *client) readPump() {
 	defer func() {
 		c.ser.unregister <- c
@@ -53,10 +54,11 @@ func (c *client) readPump() {
 			break
 		}
 
-		c.ser.broadcast <- &Message{c, bytes.TrimSpace(msg)}
+		c.ser.broadcast <- &message{c, bytes.TrimSpace(msg)}
 	}
 }
 
+// 写事件
 func (c *client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -92,7 +94,8 @@ func (c *client) writePump() {
 	}
 }
 
-func newClient(s *Server, w http.ResponseWriter, r *http.Request) {
+// 获得 client 实例
+func newClient(s *server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
