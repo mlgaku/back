@@ -50,8 +50,12 @@ func (m *module) invoke(mod, act string) error {
 		return fmt.Errorf("%s module does not exist.", mod)
 	}
 
-	res := reflect.ValueOf(r).MethodByName(strings.Title(act)).Call(nil)
+	mth := reflect.ValueOf(r).MethodByName(strings.Title(act))
+	if !mth.IsValid() {
+		return fmt.Errorf("%s method does not exist.", strings.Title(act))
+	}
 
+	res := mth.Call(nil)
 	m.response.write(res[0].Interface())
 	return nil
 }

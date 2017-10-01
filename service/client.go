@@ -26,6 +26,10 @@ const (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	// debug
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 type client struct {
@@ -102,9 +106,9 @@ func newClient(s *server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &client{ser: s, conn: conn, send: make(chan []byte, 256)}
-	s.register <- client
+	cli := &client{ser: s, conn: conn, send: make(chan []byte, 256)}
+	s.register <- cli
 
-	go client.writePump()
-	go client.readPump()
+	go cli.writePump()
+	go cli.readPump()
 }
