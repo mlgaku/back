@@ -33,24 +33,24 @@ var upgrader = websocket.Upgrader{
 }
 
 type client struct {
-	ser  *server         // 客户所属 server
-	conn *websocket.Conn // 客户 ws 连接
-	send chan []byte     // 待发送数据
+	send       chan []byte     // 待发送数据
+	server     *server         // 客户所属 server
+	connection *websocket.Conn // 客户 ws 连接
 }
 
 // 读事件
 func (c *client) readPump() {
 	defer func() {
-		c.ser.unregister <- c
-		c.conn.Close()
+		c.server.unregister <- c
+		c.connection.Close()
 	}()
 
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.connection.SetReadLimit(maxMessageSize)
+	c.connection.SetReadDeadline(time.Now().Add(pongWait))
+	c.connection.SetPongHandler(func(string) error { c.connection.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
-		_, msg, err := c.conn.ReadMessage()
+		_, msg, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
@@ -58,7 +58,7 @@ func (c *client) readPump() {
 			break
 		}
 
-		c.ser.broadcast <- &message{c, bytes.TrimSpace(msg)}
+		c.server.broadcast <- &message{c, bytes.TrimSpace(msg)}
 	}
 }
 
@@ -67,20 +67,20 @@ func (c *client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		c.connection.Close()
 	}()
 
 	for {
 		select {
 		case msg, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			c.connection.SetWriteDeadline(time.Now().Add(writeWait))
 
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.connection.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			w, err := c.connection.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
@@ -90,8 +90,8 @@ func (c *client) writePump() {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			c.connection.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -106,7 +106,7 @@ func newClient(ser *server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cli := &client{ser: ser, conn: conn, send: make(chan []byte, 256)}
+	cli := &client{send: make(chan []byte, 256), server: ser, connection: conn}
 	ser.register <- cli
 
 	go cli.writePump()

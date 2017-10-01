@@ -9,6 +9,12 @@ import (
 type Home struct{}
 
 // 测试
-func (*Home) Hello() Value {
+func (*Home) Hello(req *Request, res *Response) Value {
+	for i := 0; i < 10; i++ {
+		res.Write("ddd")
+	}
+
+	fmt.Println(req.BodyStr)
+
 	return fmt.Sprintf("[%g] hello world", rand.Float64())
 }

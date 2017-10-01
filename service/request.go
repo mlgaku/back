@@ -1,5 +1,7 @@
 package service
 
+import "github.com/sxyazi/maile/common"
+
 type request struct {
 	body   []byte
 	client *client
@@ -9,9 +11,17 @@ type request struct {
 func (r *request) handle() {
 	res := newResponse(r.client)
 
-	err := newModule(res).load(r.body)
+	err := newModule(r, res).load(r.body)
 	if err != nil {
 		res.write(err.Error())
+	}
+}
+
+// 创建替身
+func (r *request) pseudo() *common.Request {
+	return &common.Request{
+		Body:    r.body,
+		BodyStr: string(r.body),
 	}
 }
 

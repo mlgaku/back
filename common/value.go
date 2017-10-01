@@ -4,8 +4,8 @@ package common
 type Value interface{}
 
 // 字符串值
-func StringValue(v *Value) string {
-	switch n := (*v).(type) {
+func StringValue(val *Value) string {
+	switch n := (*val).(type) {
 
 	// 字符串
 	case string:
@@ -17,6 +17,6 @@ func StringValue(v *Value) string {
 }
 
 // 字节值
-func BytesValue(v *Value) []byte {
-	return []byte(StringValue(v))
+func BytesValue(val *Value) []byte {
+	return []byte(StringValue(val))
 }

@@ -19,3 +19,8 @@ func (*App) Start() {
 	})
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+// 获得 App 实例
+func NewApp() *App {
+	return &App{}
+}
