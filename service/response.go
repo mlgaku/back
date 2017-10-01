@@ -20,6 +20,7 @@ func (r *response) write(val common.Value) {
 	r.client.send <- common.BytesValue(&val)
 }
 
+// 获得 response 实例
 func newResponse(cli *client) *response {
 	return &response{
 		client: cli,

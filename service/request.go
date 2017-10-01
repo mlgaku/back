@@ -15,6 +15,7 @@ func (r *request) handle() {
 	}
 }
 
+// 获得 request 实例
 func newRequest(cli *client, body []byte) *request {
 	return &request{
 		body:   body,

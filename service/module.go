@@ -52,6 +52,7 @@ func (m *module) invoke(mod, act string) error {
 	return nil
 }
 
+// 获得 module 实例
 func newModule(res *response) *module {
 	return &module{
 		response: res,
