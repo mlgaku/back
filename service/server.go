@@ -37,7 +37,7 @@ func (s *server) watch() {
 		// 处理消息
 		case message := <-s.broadcast:
 			go func() {
-				new(request).handle(message.client, message.content)
+				newRequest(message.client, message.content).handle()
 			}()
 		}
 	}

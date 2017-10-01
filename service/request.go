@@ -1,13 +1,23 @@
 package service
 
-type request struct{}
+type request struct {
+	body   []byte
+	client *client
+}
 
 // 消息处理
-func (*request) handle(cli *client, msg []byte) {
-	res := new(response).init(cli)
+func (r *request) handle() {
+	res := newResponse(r.client)
 
-	err := new(module).init(res).load(msg)
+	err := newModule(res).load(r.body)
 	if err != nil {
 		res.write(err.Error())
+	}
+}
+
+func newRequest(cli *client, body []byte) *request {
+	return &request{
+		body:   body,
+		client: cli,
 	}
 }

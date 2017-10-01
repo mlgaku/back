@@ -99,15 +99,15 @@ func (c *client) writePump() {
 }
 
 // 获得 client 实例
-func newClient(s *server, w http.ResponseWriter, r *http.Request) {
+func newClient(ser *server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	cli := &client{ser: s, conn: conn, send: make(chan []byte, 256)}
-	s.register <- cli
+	cli := &client{ser: ser, conn: conn, send: make(chan []byte, 256)}
+	ser.register <- cli
 
 	go cli.writePump()
 	go cli.readPump()
