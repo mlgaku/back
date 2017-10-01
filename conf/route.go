@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"github.com/sxyazi/maile/module"
+	"github.com/mlgaku/back/module"
 )
 
 var Route = map[string]interface{}{

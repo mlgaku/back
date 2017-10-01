@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sxyazi/maile/service"
+	"github.com/mlgaku/back/service"
 )
 
 func main() {

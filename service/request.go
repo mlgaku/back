@@ -1,6 +1,6 @@
 package service
 
-import "github.com/sxyazi/maile/common"
+import "github.com/mlgaku/back/common"
 
 type request struct {
 	body   []byte

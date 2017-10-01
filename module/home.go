@@ -2,7 +2,7 @@ package module
 
 import (
 	"fmt"
-	. "github.com/sxyazi/maile/common"
+	. "github.com/mlgaku/back/common"
 	"math/rand"
 )
 

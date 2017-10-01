@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/sxyazi/maile/common"
+	"github.com/mlgaku/back/common"
 	"log"
 )
 
