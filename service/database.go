@@ -10,8 +10,8 @@ type database struct {
 }
 
 // 建立连接
-func (d *database) connect() {
-	ses, err := mgo.Dial("127.0.0.1")
+func (d *database) connect(addr string) {
+	ses, err := mgo.Dial(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -33,8 +33,8 @@ func (d *database) pseudo() *types.Database {
 }
 
 // 获得 database 实例
-func newDatabase() *database {
+func newDatabase(addr string) *database {
 	db := &database{}
-	db.connect()
+	db.connect(addr)
 	return db
 }

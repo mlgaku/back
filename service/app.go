@@ -1,20 +1,27 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
 
-var db *database
+var (
+	_db   *database
+	_conf *config
+)
 
 // app 服务
 type App struct{}
 
 // 启动应用
 func (*App) Start() {
+	// 配置
+	_conf = newConfig()
+
 	// 数据库
-	db = newDatabase()
-	defer db.disconnect()
+	_db = newDatabase(fmt.Sprintf("%s:%d", _conf.conf.Db.Host, _conf.conf.Db.Port))
+	defer _db.disconnect()
 
 	// ws 服务
 	server := newServer()

@@ -76,7 +76,9 @@ func (m *module) inject(mth *reflect.Value) []reflect.Value {
 		case "Response":
 			args = append(args, reflect.ValueOf(m.response.pseudo()))
 		case "Database":
-			args = append(args, reflect.ValueOf(db.pseudo()))
+			args = append(args, reflect.ValueOf(_db.pseudo()))
+		case "Config":
+			args = append(args, reflect.ValueOf(_conf.pseudo()))
 
 		}
 	}
