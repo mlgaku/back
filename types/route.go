@@ -1,4 +1,4 @@
-package common
+package types
 
 // 路由信息
 type Route struct {

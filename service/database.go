@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/mlgaku/back/common"
+	"github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2"
 )
 
@@ -26,8 +26,8 @@ func (d *database) disconnect() {
 }
 
 // 创建替身
-func (d *database) pseudo() *common.Database {
-	return &common.Database{
+func (d *database) pseudo() *types.Database {
+	return &types.Database{
 		Session: d.session,
 	}
 }

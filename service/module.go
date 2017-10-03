@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/conf"
+	"github.com/mlgaku/back/types"
 	"path"
 	"reflect"
 	"strings"
@@ -19,7 +19,7 @@ type module struct {
 
 // 加载模块
 func (m *module) load(msg []byte) error {
-	route := &common.Route{}
+	route := &types.Route{}
 	if json.Unmarshal(msg, route) != nil {
 		return errors.New("json parsing failed")
 	}

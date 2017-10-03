@@ -2,7 +2,7 @@ package module
 
 import (
 	"fmt"
-	"github.com/mlgaku/back/common"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 )
@@ -14,7 +14,7 @@ type Person struct {
 
 type User struct{}
 
-func (*User) Reg(db *common.Database) common.Value {
+func (*User) Reg(db *Database) Value {
 	c := db.Session.DB("test").C("people")
 
 	err := c.Insert(&Person{"Ale", "+55 53 8116 9639"}, &Person{"Cla", "+55 53 8402 8510"})
@@ -32,7 +32,7 @@ func (*User) Reg(db *common.Database) common.Value {
 	return ""
 }
 
-func (*User) Test() common.Value {
+func (*User) Test() Value {
 	return map[string]string{"name": "yazi", "age": "17"}
 
 	//return &struct {

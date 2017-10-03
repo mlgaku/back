@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/mlgaku/back/common"
+	"github.com/mlgaku/back/types"
 	"log"
 )
 
@@ -10,7 +11,7 @@ type response struct {
 }
 
 // 写内容
-func (r *response) write(val common.Value) {
+func (r *response) write(val types.Value) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("response failed: %s", r)
@@ -21,9 +22,9 @@ func (r *response) write(val common.Value) {
 }
 
 // 创建替身
-func (r *response) pseudo() *common.Response {
-	return &common.Response{
-		Write: func(val common.Value) {
+func (r *response) pseudo() *types.Response {
+	return &types.Response{
+		Write: func(val types.Value) {
 			r.write(val)
 		},
 		Connection: r.client.connection,

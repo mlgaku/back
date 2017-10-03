@@ -1,6 +1,6 @@
 package service
 
-import "github.com/mlgaku/back/common"
+import "github.com/mlgaku/back/types"
 
 type request struct {
 	body   []byte
@@ -18,8 +18,8 @@ func (r *request) handle() {
 }
 
 // 创建替身
-func (r *request) pseudo() *common.Request {
-	return &common.Request{
+func (r *request) pseudo() *types.Request {
+	return &types.Request{
 		Body:    r.body,
 		BodyStr: string(r.body),
 	}

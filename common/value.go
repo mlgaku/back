@@ -2,10 +2,8 @@ package common
 
 import (
 	"encoding/json"
+	. "github.com/mlgaku/back/types"
 )
-
-// 值
-type Value interface{}
 
 // 字符串值
 func StringValue(val *Value) string {

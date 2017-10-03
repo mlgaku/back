@@ -1,4 +1,4 @@
-package common
+package types
 
 type Request struct {
 	Body    []byte // 字节内容
