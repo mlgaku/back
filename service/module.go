@@ -21,14 +21,14 @@ type module struct {
 func (m *module) load(msg []byte) error {
 	route := &common.Route{}
 	if json.Unmarshal(msg, route) != nil {
-		return errors.New("json parsing failed.")
+		return errors.New("json parsing failed")
 	}
 
 	switch {
 	case route.Module == "":
-		return errors.New("mod get failed.")
+		return errors.New("mod get failed")
 	case route.Action == "":
-		return errors.New("act get failed.")
+		return errors.New("act get failed")
 	}
 
 	return m.invoke(route.Module, route.Action)
@@ -38,16 +38,19 @@ func (m *module) load(msg []byte) error {
 func (m *module) invoke(mod, act string) error {
 	r, ok := conf.Route[mod]
 	if !ok {
-		return fmt.Errorf("%s module does not exist.", mod)
+		return fmt.Errorf("%s module does not exist", mod)
 	}
 
 	mth := reflect.ValueOf(r).MethodByName(strings.Title(act))
 	if !mth.IsValid() {
-		return fmt.Errorf("%s method does not exist.", act)
+		return fmt.Errorf("%s method does not exist", act)
 	}
 
 	res := mth.Call(m.inject(&mth))
-	m.response.write(res[0].Interface())
+	if len(res) > 0 {
+		m.response.write(res[0].Interface())
+	}
+
 	return nil
 }
 
@@ -71,6 +74,9 @@ func (m *module) inject(mth *reflect.Value) []reflect.Value {
 			args = append(args, reflect.ValueOf(m.request.pseudo()))
 		case "Response":
 			args = append(args, reflect.ValueOf(m.response.pseudo()))
+		case "Database":
+			args = append(args, reflect.ValueOf(db.pseudo()))
+
 		}
 	}
 

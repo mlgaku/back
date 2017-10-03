@@ -5,14 +5,18 @@ import (
 	"net/http"
 )
 
+var db *database
+
 // app 服务
 type App struct{}
 
 // 启动应用
 func (*App) Start() {
+	db = newDatabase()
+	defer db.disconnect()
+
 	server := newServer()
 	go server.watch()
-
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 		newClient(server, w, r)
