@@ -7,7 +7,7 @@ import (
 )
 
 type response struct {
-	client *client
+	client *client // 客户
 }
 
 // 写内容

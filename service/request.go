@@ -3,15 +3,16 @@ package service
 import "github.com/mlgaku/back/types"
 
 type request struct {
-	body   []byte
-	client *client
+	body   string  // 内容
+	prim   []byte  // 原始内容
+	client *client // 客户
 }
 
 // 消息处理
 func (r *request) handle() {
 	res := newResponse(r.client)
 
-	err := newModule(r, res).load(r.body)
+	err := newModule(r, res).load(r.prim)
 	if err != nil {
 		res.write(err.Error())
 	}
@@ -20,15 +21,15 @@ func (r *request) handle() {
 // 创建替身
 func (r *request) pseudo() *types.Request {
 	return &types.Request{
-		Body:    r.body,
-		BodyStr: string(r.body),
+		Body:    []byte(r.body),
+		BodyStr: r.body,
 	}
 }
 
 // 获得 request 实例
-func newRequest(cli *client, body []byte) *request {
+func newRequest(cli *client, prim []byte) *request {
 	return &request{
-		body:   body,
+		prim:   prim,
 		client: cli,
 	}
 }

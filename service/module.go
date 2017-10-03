@@ -20,7 +20,7 @@ type module struct {
 // 加载模块
 func (m *module) load(msg []byte) error {
 	route := &types.Route{}
-	if json.Unmarshal(msg, route) != nil {
+	if json.Unmarshal(msg, &route) != nil {
 		return errors.New("json parsing failed")
 	}
 
@@ -31,6 +31,7 @@ func (m *module) load(msg []byte) error {
 		return errors.New("act get failed")
 	}
 
+	m.request.body = route.Body
 	return m.invoke(route.Module, route.Action)
 }
 

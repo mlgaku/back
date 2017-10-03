@@ -19,8 +19,8 @@ const (
 	// ping 周期
 	pingPeriod = (pongWait * 9) / 10
 
-	// 最大消息大小
-	maxMessageSize = 512
+	// 最大消息大小(2M)
+	maxMessageSize = 1024 * 1024 * 2
 )
 
 var upgrader = websocket.Upgrader{
