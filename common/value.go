@@ -24,13 +24,19 @@ func StringValue(val *Value) string {
 	case string:
 		return n
 
-	// 其它值统一转为json
-	default:
-		b, e := json.Marshal(*val)
-		if e == nil {
-			return string(b)
-		}
+	// 成功
+	case *Succ:
+		n.Statue = true
 
+	// 失败
+	case *Fail:
+		n.Statue = false
+
+	}
+
+	// 其它值统一转为json
+	if b, e := json.Marshal(*val); e == nil {
+		return string(b)
 	}
 
 	return "Conversion failed"

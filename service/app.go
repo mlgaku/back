@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -20,7 +19,7 @@ func (*App) Start() {
 	_conf = newConfig()
 
 	// 数据库
-	_db = newDatabase(fmt.Sprintf("%s:%d", _conf.conf.Db.Host, _conf.conf.Db.Port))
+	_db = newDatabase(_conf.conf.Db.Host, _conf.conf.Db.Database, _conf.conf.Db.Port)
 	defer _db.disconnect()
 
 	// ws 服务
