@@ -38,8 +38,8 @@ func (u *User) Reg(db *Database, req *Request) Value {
 func (u *User) Check(db *Database, req *Request) Value {
 	user := u.parse(req.Body)
 
-	if err := com.NewVali().Var(user.Name, "required"); err != nil {
-		return &Fail{Msg: err.Error()}
+	if err := com.NewVali().Var(user.Name, "required"); err != "" {
+		return &Fail{Msg: err}
 	}
 
 	if c, _ := db.C("user").Find(bson.M{"name": user.Name}).Count(); c > 0 {
@@ -54,8 +54,8 @@ func (u *User) Login(db *Database, req *Request) Value {
 	user := u.parse(req.Body)
 
 	err := com.NewVali().Each(com.Iter(user.Name, user.Password), []string{"required"})
-	if err != nil {
-		return &Fail{Msg: err.Error()}
+	if err != "" {
+		return &Fail{Msg: err}
 	}
 
 	if _, ok := u.Check(db, req).(*Succ); ok {
@@ -63,7 +63,7 @@ func (u *User) Login(db *Database, req *Request) Value {
 	}
 
 	result := &User{}
-	if err = db.C("user").Find(bson.M{"name": user.Name}).One(result); err != nil {
+	if err := db.C("user").Find(bson.M{"name": user.Name}).One(result); err != nil {
 		return &Fail{Msg: "未知错误"}
 	}
 

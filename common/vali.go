@@ -20,12 +20,19 @@ func (v *vali) init() {
 }
 
 // 验证 var
-func (v *vali) Var(field interface{}, tag string) error {
-	return v.Validate.Var(field, tag)
+func (v *vali) Var(field interface{}, tag string) string {
+	err := v.Validate.Var(field, tag)
+	if err == nil {
+		return ""
+	}
+	for _, err := range err.(vl.ValidationErrors) {
+		return err.Translate(v.Translate)
+	}
+	return ""
 }
 
 // 验证多个 var
-func (v *vali) Each(field []interface{}, tag []string) error {
+func (v *vali) Each(field []interface{}, tag []string) string {
 	var t string
 	for i, x := range field {
 		if len(tag) == 1 {
@@ -34,11 +41,11 @@ func (v *vali) Each(field []interface{}, tag []string) error {
 			t = tag[i]
 		}
 
-		if err := v.Var(x, t); err != nil {
+		if err := v.Var(x, t); err != "" {
 			return err
 		}
 	}
-	return nil
+	return ""
 }
 
 // 验证 struct
