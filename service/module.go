@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/conf"
 	"github.com/mlgaku/back/types"
 	"path"
@@ -11,47 +12,62 @@ import (
 	"strings"
 )
 
-// module 服务
-type module struct {
-	request  *request
-	response *response
-}
+type (
+	route struct {
+		Mod  string `json:"mod"`  // 模块
+		Act  string `json:"act"`  // 行为
+		Body string `json:"body"` // 正文
+	}
+	// module 服务
+	module struct {
+		route    *route
+		request  *request
+		response *response
+	}
+)
 
 // 加载模块
 func (m *module) load(msg []byte) error {
-	route := &types.Route{}
-	if json.Unmarshal(msg, route) != nil {
+	m.route = &route{}
+	if json.Unmarshal(msg, m.route) != nil {
 		return errors.New("json parsing failed")
 	}
 
 	switch {
-	case route.Module == "":
+	case m.route.Mod == "":
 		return errors.New("mod get failed")
-	case route.Action == "":
+	case m.route.Act == "":
 		return errors.New("act get failed")
-	case !json.Valid([]byte(route.Body)):
+	case !json.Valid([]byte(m.route.Body)):
 		return errors.New("invalid body content")
 	}
 
-	m.request.body = route.Body
-	return m.invoke(route.Module, route.Action)
+	m.request.body = m.route.Body
+	return m.invoke()
+}
+
+// 打包数据
+func (m *module) pack(data types.Value) []byte {
+	m.route.Body = common.StringValue(&data)
+	b, _ := json.Marshal(m.route)
+	return b
 }
 
 // 调用方法
-func (m *module) invoke(mod, act string) error {
-	r, ok := conf.Route[mod]
+func (m *module) invoke() error {
+	r, ok := conf.Route[m.route.Mod]
 	if !ok {
-		return fmt.Errorf("%s module does not exist", mod)
+		return fmt.Errorf("%s module does not exist", m.route.Mod)
 	}
 
-	mth := reflect.ValueOf(r).MethodByName(strings.Title(act))
+	mth := reflect.ValueOf(r).MethodByName(strings.Title(m.route.Act))
 	if !mth.IsValid() {
-		return fmt.Errorf("%s method does not exist", act)
+		return fmt.Errorf("%s method does not exist", m.route.Act)
 	}
 
 	res := mth.Call(m.inject(&mth))
 	if len(res) > 0 {
-		m.response.write(res[0].Interface())
+		m.response.write(m.pack(res[0].Interface()))
 	}
 
 	return nil

@@ -14,7 +14,7 @@ func (r *request) handle() {
 
 	err := newModule(r, res).load(r.prim)
 	if err != nil {
-		res.write(err.Error())
+		res.write([]byte(err.Error()))
 	}
 }
 

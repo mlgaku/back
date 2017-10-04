@@ -11,7 +11,7 @@ type Home struct{}
 // 测试
 func (*Home) Hello(req *Request, res *Response) Value {
 	for i := 0; i < 10; i++ {
-		res.Write("ddd")
+		res.Write([]byte("ddd"))
 	}
 
 	fmt.Println(req.BodyStr)
