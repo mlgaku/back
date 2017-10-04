@@ -29,6 +29,8 @@ func (m *module) load(msg []byte) error {
 		return errors.New("mod get failed")
 	case route.Action == "":
 		return errors.New("act get failed")
+	case !json.Valid([]byte(route.Body)):
+		return errors.New("invalid body content")
 	}
 
 	m.request.body = route.Body

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/types"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type User struct {
@@ -12,11 +13,15 @@ type User struct {
 	Password string `json:"password" validate:"required,min=8,max=20,alphanum"`
 }
 
-// 注册
-func (*User) Reg(db *Database, req *Request) Value {
-
+func (*User) parse(body []byte) *User {
 	user := &User{}
-	json.Unmarshal(req.Body, user)
+	json.Unmarshal(body, user)
+	return user
+}
+
+// 注册
+func (u *User) Reg(db *Database, req *Request) Value {
+	user := u.parse(req.Body)
 
 	if err := com.NewVali().Struct(user); err != "" {
 		return &Fail{Msg: err}
@@ -29,19 +34,41 @@ func (*User) Reg(db *Database, req *Request) Value {
 	return &Succ{}
 }
 
-// 登录
-func (*User) Login(db *Database, req *Request) Value {
+// 检查用户名是否已被注册
+func (u *User) Check(db *Database, req *Request) Value {
+	user := u.parse(req.Body)
 
-	user := &User{}
-	json.Unmarshal(req.Body, user)
+	if err := com.NewVali().Var(user.Name, "required"); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	if c, _ := db.C("user").Find(bson.M{"name": user.Name}).Count(); c > 0 {
+		return &Fail{Msg: "用户名已存在"}
+	}
+
+	return &Succ{}
+}
+
+// 登录
+func (u *User) Login(db *Database, req *Request) Value {
+	user := u.parse(req.Body)
 
 	err := com.NewVali().Each(com.Iter(user.Name, user.Password), []string{"required"})
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if c, _ := db.C("user").Find(user).Count(); c != 1 {
-		return &Fail{Msg: "登录失败"}
+	if _, ok := u.Check(db, req).(*Succ); ok {
+		return &Fail{Msg: "用户名不存在"}
+	}
+
+	result := &User{}
+	if err = db.C("user").Find(bson.M{"name": user.Name}).One(result); err != nil {
+		return &Fail{Msg: "未知错误"}
+	}
+
+	if result.Password != user.Password {
+		return &Fail{Msg: "用户名与密码不匹配"}
 	}
 
 	return &Succ{}
