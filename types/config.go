@@ -9,4 +9,7 @@ type Config struct {
 	App struct {
 		Debug bool
 	}
+	Secret struct {
+		Salt string
+	}
 }

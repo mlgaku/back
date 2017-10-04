@@ -13,20 +13,20 @@ type User struct {
 	Password string `json:"password" validate:"required,min=8,max=20,alphanum"`
 }
 
-func (*User) parse(body []byte) *User {
+func (*User) parse(body []byte) (*User, error) {
 	user := &User{}
-	json.Unmarshal(body, user)
-	return user
+	return user, json.Unmarshal(body, user)
 }
 
 // 注册
-func (u *User) Reg(db *Database, req *Request) Value {
-	user := u.parse(req.Body)
+func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
+	user, _ := u.parse(req.Body)
 
 	if err := com.NewVali().Struct(user); err != "" {
 		return &Fail{Msg: err}
 	}
 
+	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
 	if err := db.C("user").Insert(user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -34,24 +34,9 @@ func (u *User) Reg(db *Database, req *Request) Value {
 	return &Succ{}
 }
 
-// 检查用户名是否已被注册
-func (u *User) Check(db *Database, req *Request) Value {
-	user := u.parse(req.Body)
-
-	if err := com.NewVali().Var(user.Name, "required"); err != "" {
-		return &Fail{Msg: err}
-	}
-
-	if c, _ := db.C("user").Find(bson.M{"name": user.Name}).Count(); c > 0 {
-		return &Fail{Msg: "用户名已存在"}
-	}
-
-	return &Succ{}
-}
-
 // 登录
-func (u *User) Login(db *Database, req *Request) Value {
-	user := u.parse(req.Body)
+func (u *User) Login(db *Database, req *Request, conf *Config) Value {
+	user, _ := u.parse(req.Body)
 
 	err := com.NewVali().Each(com.Iter(user.Name, user.Password), []string{"required"})
 	if err != "" {
@@ -67,8 +52,23 @@ func (u *User) Login(db *Database, req *Request) Value {
 		return &Fail{Msg: "未知错误"}
 	}
 
-	if result.Password != user.Password {
+	if result.Password != com.Sha1(user.Password, conf.Secret.Salt) {
 		return &Fail{Msg: "用户名与密码不匹配"}
+	}
+
+	return &Succ{}
+}
+
+// 检查用户名是否已被注册
+func (u *User) Check(db *Database, req *Request) Value {
+	user, _ := u.parse(req.Body)
+
+	if err := com.NewVali().Var(user.Name, "required"); err != "" {
+		return &Fail{Msg: err}
+	}
+
+	if c, _ := db.C("user").Find(bson.M{"name": user.Name}).Count(); c > 0 {
+		return &Fail{Msg: "用户名已存在"}
 	}
 
 	return &Succ{}
