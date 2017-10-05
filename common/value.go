@@ -26,11 +26,11 @@ func StringValue(val *Value) string {
 
 	// 成功
 	case *Succ:
-		n.Statue = true
+		n.Status = true
 
 	// 失败
 	case *Fail:
-		n.Statue = false
+		n.Status = false
 
 	}
 

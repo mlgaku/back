@@ -13,6 +13,7 @@ import (
 )
 
 type (
+	// 路由信息
 	route struct {
 		Mod  string `json:"mod"`  // 模块
 		Act  string `json:"act"`  // 行为
