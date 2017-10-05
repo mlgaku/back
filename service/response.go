@@ -26,7 +26,6 @@ func (r *response) pseudo() *types.Response {
 		Write: func(v []byte) {
 			r.write(v)
 		},
-		Connection: r.client.connection,
 	}
 }
 

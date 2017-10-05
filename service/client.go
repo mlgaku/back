@@ -34,6 +34,7 @@ var upgrader = websocket.Upgrader{
 
 type client struct {
 	send       chan []byte     // 待发送数据
+	http       *http.Request   // 原始HTTP请求
 	server     *server         // 客户所属 server
 	connection *websocket.Conn // 客户 ws 连接
 }
@@ -106,7 +107,12 @@ func newClient(ser *server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cli := &client{send: make(chan []byte, 256), server: ser, connection: conn}
+	cli := &client{
+		send:       make(chan []byte, 256),
+		http:       r,
+		server:     ser,
+		connection: conn,
+	}
 	ser.register <- cli
 
 	go cli.writePump()
