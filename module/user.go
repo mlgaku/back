@@ -5,12 +5,17 @@ import (
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type User struct {
-	Name     string `json:"name" validate:"required,min=4,max=15,alphanum"`
-	Email    string `json:"email" validate:"required,min=8,max=30,email"`
-	Password string `json:"password" validate:"required,min=8,max=20,alphanum"`
+	Id       bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Name     string        `json:"name" validate:"required,min=4,max=15,alphanum"`
+	Email    string        `json:"email" validate:"required,min=8,max=30,email"`
+	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
+
+	RegIP   string `json:"reg_ip,omitempty"`
+	RegTime int64  `json:"reg_time,omitempty"`
 }
 
 func (*User) parse(body []byte) (*User, error) {
@@ -27,6 +32,9 @@ func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 	}
 
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
+	user.RegIP, _ = com.IPAddr(req.Http.RemoteAddr)
+	user.RegTime = time.Now().Unix()
+
 	if err := db.C("user").Insert(user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -56,7 +64,10 @@ func (u *User) Login(db *Database, req *Request, conf *Config) Value {
 		return &Fail{Msg: "用户名与密码不匹配"}
 	}
 
-	return &Succ{}
+	return &Succ{Data: &User{
+		Name:  result.Name,
+		Email: result.Email,
+	}}
 }
 
 // 检查用户名是否已被注册

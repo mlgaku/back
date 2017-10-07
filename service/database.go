@@ -32,22 +32,16 @@ func (d *database) disconnect() {
 
 // 创建替身
 func (d *database) pseudo() *types.Database {
-	t := &types.Database{
-		Session: d.session,
-	}
+	t := &types.Database{Session: d.session}
+	t.Config.Host, t.Config.Name, t.Config.Port = d.config.host, d.config.name, d.config.port
 
-	t.Config.Host = d.config.host
-	t.Config.Name = d.config.name
-	t.Config.Port = d.config.port
 	return t
 }
 
 // 获得 database 实例
 func newDatabase(host, name string, port int) *database {
 	db := &database{}
-	db.config.name = name
-	db.config.host = host
-	db.config.port = port
+	db.config.name, db.config.host, db.config.port = name, host, port
 
 	db.connect()
 	return db

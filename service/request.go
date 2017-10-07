@@ -23,7 +23,7 @@ func (r *request) pseudo() *types.Request {
 	return &types.Request{
 		Body:       []byte(r.body),
 		BodyStr:    r.body,
-		Http:    r.client.http,
+		Http:       r.client.http,
 		Connection: r.client.connection,
 	}
 }
