@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mlgaku/back/types"
 )
 
 const (
@@ -33,26 +32,26 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type client struct {
-	send       chan []byte     // 待发送数据
-	http       *http.Request   // 原始HTTP请求
-	server     *server         // 客户所属 server
-	connection *websocket.Conn // 客户 ws 连接
+type Client struct {
+	Send       chan []byte     // 待发送数据
+	Http       *http.Request   // 原始HTTP请求
+	Server     *Server         // 客户所属 server
+	Connection *websocket.Conn // 客户 ws 连接
 }
 
 // 读事件
-func (c *client) readPump() {
+func (c *Client) readPump() {
 	defer func() {
-		c.server.unregister <- c
-		c.connection.Close()
+		c.Server.unregister <- c
+		c.Connection.Close()
 	}()
 
-	c.connection.SetReadLimit(maxMessageSize)
-	c.connection.SetReadDeadline(time.Now().Add(pongWait))
-	c.connection.SetPongHandler(func(string) error { c.connection.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.Connection.SetReadLimit(maxMessageSize)
+	c.Connection.SetReadDeadline(time.Now().Add(pongWait))
+	c.Connection.SetPongHandler(func(string) error { c.Connection.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
-		_, msg, err := c.connection.ReadMessage()
+		_, msg, err := c.Connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
@@ -60,29 +59,29 @@ func (c *client) readPump() {
 			break
 		}
 
-		c.server.broadcast <- &message{c, bytes.TrimSpace(msg)}
+		c.Server.broadcast <- &message{c, bytes.TrimSpace(msg)}
 	}
 }
 
 // 写事件
-func (c *client) writePump() {
+func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.connection.Close()
+		c.Connection.Close()
 	}()
 
 	for {
 		select {
-		case msg, ok := <-c.send:
-			c.connection.SetWriteDeadline(time.Now().Add(writeWait))
+		case msg, ok := <-c.Send:
+			c.Connection.SetWriteDeadline(time.Now().Add(writeWait))
 
 			if !ok {
-				c.connection.WriteMessage(websocket.CloseMessage, []byte{})
+				c.Connection.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := c.connection.NextWriter(websocket.TextMessage)
+			w, err := c.Connection.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
@@ -92,35 +91,27 @@ func (c *client) writePump() {
 				return
 			}
 		case <-ticker.C:
-			c.connection.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			c.Connection.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.Connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
 	}
 }
 
-// 创建替身
-func (c *client) pseudo() *types.Client {
-	return &types.Client{
-		Send:       &c.send,
-		Connection: c.connection,
-	}
-}
-
-// 获得 client 实例
-func newClient(ser *server, w http.ResponseWriter, r *http.Request) {
+// 获得 Client 实例
+func NewClient(ser *Server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	cli := &client{
-		send:       make(chan []byte, 256),
-		http:       r,
-		server:     ser,
-		connection: conn,
+	cli := &Client{
+		Send:       make(chan []byte, 256),
+		Http:       r,
+		Server:     ser,
+		Connection: conn,
 	}
 	ser.register <- cli
 

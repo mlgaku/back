@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"math/rand"
 )
@@ -14,6 +15,5 @@ func (*Home) Hello(req *Request, res *Response) Value {
 		res.Write([]byte("ddd"))
 	}
 
-	fmt.Println(req.BodyStr)
 	return fmt.Sprintf("[%g] hello world", rand.Float64())
 }

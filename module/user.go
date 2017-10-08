@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	com "github.com/mlgaku/back/common"
+	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -32,7 +33,7 @@ func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 	}
 
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
-	user.RegIP, _ = com.IPAddr(req.Http.RemoteAddr)
+	user.RegIP, _ = com.IPAddr(req.Client.Http.RemoteAddr)
 	user.RegTime = time.Now().Unix()
 
 	if err := db.C("user").Insert(user); err != nil {

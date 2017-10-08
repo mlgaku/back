@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	com "github.com/mlgaku/back/common"
+	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 )

@@ -4,78 +4,66 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mlgaku/back/common"
-	"github.com/mlgaku/back/conf"
 	"github.com/mlgaku/back/types"
 	"path"
 	"reflect"
 	"strings"
 )
 
-type (
-	// 路由信息
-	route struct {
-		Mod  string `json:"mod"`  // 模块
-		Act  string `json:"act"`  // 行为
-		Body string `json:"body"` // 正文
-	}
-	// module 服务
-	module struct {
-		route    *route
-		request  *request
-		response *response
-	}
-)
+type Module struct {
+	app  *App
+	cli  *Client
+	Prot *types.Prot
+}
 
 // 加载模块
-func (m *module) load(msg []byte) error {
-	m.route = &route{}
-	if json.Unmarshal(msg, m.route) != nil {
-		return errors.New("json parsing failed")
+func (m *Module) Load(msg []byte) (types.Value, error) {
+	p := &types.Prot{}
+	if json.Unmarshal(msg, p) != nil {
+		return nil, errors.New("json parsing failed")
 	}
 
+	return m.LoadProt(p)
+}
+
+// 加载模块(Prot方式)
+func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 	switch {
-	case m.route.Mod == "":
-		return errors.New("mod get failed")
-	case m.route.Act == "":
-		return errors.New("act get failed")
-	case !json.Valid([]byte(m.route.Body)):
-		return errors.New("invalid body content")
+	case prot.Mod == "":
+		return nil, errors.New("mod get failed")
+	case prot.Act == "":
+		return nil, errors.New("act get failed")
+	case !json.Valid([]byte(prot.Body)):
+		return nil, errors.New("invalid body content")
 	}
 
-	m.request.body = m.route.Body
+	m.Prot = prot
 	return m.invoke()
 }
 
-// 打包数据
-func (m *module) pack(data types.Value) []byte {
-	m.route.Body = common.StringValue(&data)
-	b, _ := json.Marshal(m.route)
-	return b
-}
-
 // 调用方法
-func (m *module) invoke() error {
-	r, ok := conf.Route[m.route.Mod]
+func (m *Module) invoke() (types.Value, error) {
+	r, ok := m.app.Route[m.Prot.Mod]
 	if !ok {
-		return fmt.Errorf("%s module does not exist", m.route.Mod)
+		return nil, fmt.Errorf("%s module does not exist", m.Prot.Mod)
 	}
 
-	mth := reflect.ValueOf(r).MethodByName(strings.Title(m.route.Act))
+	mth := reflect.ValueOf(r).MethodByName(strings.Title(m.Prot.Act))
 	if !mth.IsValid() {
-		return fmt.Errorf("%s method does not exist", m.route.Act)
+		return nil, fmt.Errorf("%s method does not exist", m.Prot.Act)
 	}
 
 	res := mth.Call(m.inject(&mth))
 	if len(res) > 0 {
-		m.response.write(m.pack(res[0].Interface()))
+		return res[0].Interface(), nil
+		//m.response.Write(m.pack())
 	}
 
-	return nil
+	return nil, nil
 }
 
 // 依赖注入
-func (m *module) inject(mth *reflect.Value) []reflect.Value {
+func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 	num := (*mth).Type().NumIn()
 	if num < 1 {
 		return nil
@@ -91,25 +79,25 @@ func (m *module) inject(mth *reflect.Value) []reflect.Value {
 
 		switch n := strings.TrimLeft(path.Ext(t.String()), "."); n {
 		case "Request":
-			args = append(args, reflect.ValueOf(m.request.pseudo()))
+			args = append(args, reflect.ValueOf(NewRequest([]byte(m.Prot.Body), m.cli)))
 		case "Response":
-			args = append(args, reflect.ValueOf(m.response.pseudo()))
+			args = append(args, reflect.ValueOf(NewResponse(m.cli)))
 		case "Pubsub":
-			args = append(args, reflect.ValueOf(_ps.pseudo()))
+			args = append(args, reflect.ValueOf(m.app.Ps))
 		case "Database":
-			args = append(args, reflect.ValueOf(_db.pseudo()))
+			args = append(args, reflect.ValueOf(m.app.Db))
 		case "Config":
-			args = append(args, reflect.ValueOf(_conf.pseudo()))
+			args = append(args, reflect.ValueOf(m.app.Conf))
 		}
 	}
 
 	return args
 }
 
-// 获得 module 实例
-func newModule(req *request, res *response) *module {
-	return &module{
-		request:  req,
-		response: res,
+// 获得 Module 实例
+func NewModule(app *App, cli *Client) *Module {
+	return &Module{
+		app: app,
+		cli: cli,
 	}
 }

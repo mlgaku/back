@@ -2,45 +2,36 @@ package service
 
 import (
 	"fmt"
-	"github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2"
 )
 
-type database struct {
+type Database struct {
 	config struct {
 		name, host string
 		port       int
 	}
-	session *mgo.Session
+	Session *mgo.Session
 }
 
 // 建立连接
-func (d *database) connect() {
+func (d *Database) connect() {
 	ses, err := mgo.Dial(fmt.Sprintf("%s:%d", d.config.host, d.config.port))
 	if err != nil {
 		panic(err)
 	}
 
 	ses.SetMode(mgo.Monotonic, true)
-	d.session = ses
+	d.Session = ses
 }
 
-// 断开连接
-func (d *database) disconnect() {
-	d.session.Close()
+// 获得 Collection 实例
+func (d *Database) C(name string) *mgo.Collection {
+	return d.Session.DB(d.config.name).C(name)
 }
 
-// 创建替身
-func (d *database) pseudo() *types.Database {
-	t := &types.Database{Session: d.session}
-	t.Config.Host, t.Config.Name, t.Config.Port = d.config.host, d.config.name, d.config.port
-
-	return t
-}
-
-// 获得 database 实例
-func newDatabase(host, name string, port int) *database {
-	db := &database{}
+// 获得 Database 实例
+func NewDatabase(host, name string, port int) *Database {
+	db := &Database{}
 	db.config.name, db.config.host, db.config.port = name, host, port
 
 	db.connect()

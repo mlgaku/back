@@ -1,27 +1,27 @@
 package service
 
 type (
-	server struct {
+	Server struct {
 		// 已注册的客户
-		clients map[*client]bool
+		clients map[*Client]bool
 
 		// 来自客户的消息
 		broadcast chan *message
 
 		// 待注册的客户
-		register chan *client
+		register chan *Client
 		// 待销毁的客户
-		unregister chan *client
+		unregister chan *Client
 	}
 
 	message struct {
-		client  *client
+		client  *Client
 		content []byte
 	}
 )
 
 // 监听
-func (s *server) watch() {
+func (s *Server) Watch(han func(*Client, []byte)) {
 	for {
 		select {
 
@@ -33,24 +33,25 @@ func (s *server) watch() {
 		case client := <-s.unregister:
 			if _, ok := s.clients[client]; ok {
 				delete(s.clients, client)
-				close(client.send)
+				close(client.Send)
 			}
 
 		// 处理消息
 		case message := <-s.broadcast:
 			go func() {
-				newRequest(message.client, message.content).handle()
+				han(message.client, message.content)
 			}()
+
 		}
 	}
 }
 
-// 获得 server 实例
-func newServer() *server {
-	return &server{
-		clients:    make(map[*client]bool),
+// 获得 Server 实例
+func NewServer() *Server {
+	return &Server{
+		clients:    make(map[*Client]bool),
 		broadcast:  make(chan *message),
-		register:   make(chan *client),
-		unregister: make(chan *client),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
 	}
 }

@@ -2,34 +2,37 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/mlgaku/back/types"
 	"io/ioutil"
 )
 
-type config struct {
-	conf *types.Config
+type Config struct {
+	Db struct {
+		Host     string
+		Port     int
+		Database string
+	}
+	App struct {
+		Debug bool
+	}
+	Secret struct {
+		Salt string
+	}
 }
 
 // 读配置
-func (c *config) read() {
+func (c *Config) read() {
 	env, err := ioutil.ReadFile(".env")
 	if err != nil {
 		panic(err)
 	}
-	c.conf = &types.Config{}
-	if err = json.Unmarshal(env, c.conf); err != nil {
+	if err = json.Unmarshal(env, c); err != nil {
 		panic(err)
 	}
 }
 
-// 创建替身
-func (c *config) pseudo() *types.Config {
-	return c.conf
-}
-
-// 获得 config 实例
-func newConfig() *config {
-	c := &config{}
+// 获得 Config 实例
+func NewConfig() *Config {
+	c := &Config{}
 	c.read()
 	return c
 }

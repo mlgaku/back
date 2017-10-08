@@ -2,6 +2,7 @@ package module
 
 import (
 	"encoding/json"
+	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 )
 
