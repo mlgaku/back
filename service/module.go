@@ -94,11 +94,12 @@ func (m *module) inject(mth *reflect.Value) []reflect.Value {
 			args = append(args, reflect.ValueOf(m.request.pseudo()))
 		case "Response":
 			args = append(args, reflect.ValueOf(m.response.pseudo()))
+		case "Pubsub":
+			args = append(args, reflect.ValueOf(_ps.pseudo()))
 		case "Database":
 			args = append(args, reflect.ValueOf(_db.pseudo()))
 		case "Config":
 			args = append(args, reflect.ValueOf(_conf.pseudo()))
-
 		}
 	}
 

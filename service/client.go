@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/mlgaku/back/types"
 )
 
 const (
@@ -96,6 +97,14 @@ func (c *client) writePump() {
 				return
 			}
 		}
+	}
+}
+
+// 创建替身
+func (c *client) pseudo() *types.Client {
+	return &types.Client{
+		Send:       &c.send,
+		Connection: c.connection,
 	}
 }
 

@@ -39,6 +39,15 @@ func (n *Node) Add(db *Database, req *Request) Value {
 	return &Succ{}
 }
 
+// 获取节点列表
+func (n *Node) List(db *Database) Value {
+	node := &[]Node{}
+	if err := db.C("node").Find(bson.M{}).All(node); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+	return &Succ{Data: node}
+}
+
 // 检查是否有相同节点存在
 func (n *Node) Check(db *Database, req *Request) Value {
 	node, _ := n.parse(req.Body)

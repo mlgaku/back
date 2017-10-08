@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	_ps   *pubsub
 	_db   *database
 	_conf *config
 )
@@ -17,6 +18,9 @@ type App struct{}
 func (*App) Start() {
 	// 配置
 	_conf = newConfig()
+
+	// 发布订阅
+	_ps = newPubsub()
 
 	// 数据库
 	_db = newDatabase(_conf.conf.Db.Host, _conf.conf.Db.Database, _conf.conf.Db.Port)
