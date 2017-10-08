@@ -34,6 +34,11 @@ func (s *Server) Watch(han func(*Client, []byte)) {
 			if _, ok := s.clients[client]; ok {
 				delete(s.clients, client)
 				close(client.Send)
+				go func() {
+					for k := range APP.Ps.list {
+						delete(APP.Ps.list[k], client.Connection)
+					}
+				}()
 			}
 
 		// 处理消息

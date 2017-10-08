@@ -14,7 +14,7 @@ type Response struct {
 // 打包数据
 func (r *Response) Pack(pro types.Prot, val types.Value) []byte {
 	pro.Body = common.StringValue(&val)
-	b, _ := json.Marshal(pro)
+	b, _ := json.Marshal(&pro)
 	return b
 }
 

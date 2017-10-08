@@ -11,7 +11,6 @@ import (
 )
 
 type Module struct {
-	app  *App
 	cli  *Client
 	Prot *types.Prot
 }
@@ -43,7 +42,7 @@ func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 
 // 调用方法
 func (m *Module) invoke() (types.Value, error) {
-	r, ok := m.app.Route[m.Prot.Mod]
+	r, ok := APP.Route[m.Prot.Mod]
 	if !ok {
 		return nil, fmt.Errorf("%s module does not exist", m.Prot.Mod)
 	}
@@ -56,7 +55,6 @@ func (m *Module) invoke() (types.Value, error) {
 	res := mth.Call(m.inject(&mth))
 	if len(res) > 0 {
 		return res[0].Interface(), nil
-		//m.response.Write(m.pack())
 	}
 
 	return nil, nil
@@ -78,16 +76,18 @@ func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 		}
 
 		switch n := strings.TrimLeft(path.Ext(t.String()), "."); n {
+		case "Module":
+			args = append(args, reflect.ValueOf(m))
 		case "Request":
 			args = append(args, reflect.ValueOf(NewRequest([]byte(m.Prot.Body), m.cli)))
 		case "Response":
 			args = append(args, reflect.ValueOf(NewResponse(m.cli)))
 		case "Pubsub":
-			args = append(args, reflect.ValueOf(m.app.Ps))
+			args = append(args, reflect.ValueOf(APP.Ps))
 		case "Database":
-			args = append(args, reflect.ValueOf(m.app.Db))
+			args = append(args, reflect.ValueOf(APP.Db))
 		case "Config":
-			args = append(args, reflect.ValueOf(m.app.Conf))
+			args = append(args, reflect.ValueOf(APP.Conf))
 		}
 	}
 
@@ -95,9 +95,8 @@ func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 }
 
 // 获得 Module 实例
-func NewModule(app *App, cli *Client) *Module {
+func NewModule(cli *Client) *Module {
 	return &Module{
-		app: app,
 		cli: cli,
 	}
 }
