@@ -20,7 +20,8 @@ func (p *Pubsub) getID(pro *types.Prot) string {
 }
 
 // 发布
-func (p *Pubsub) Publish(id string) {
+func (p *Pubsub) Publish(pro *types.Prot) {
+	id := p.getID(pro)
 	if p.list[id] == nil {
 		return
 	}

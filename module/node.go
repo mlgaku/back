@@ -12,7 +12,7 @@ type Node struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Name   string        `json:"name" validate:"required,max=30,alphanum"`
 	Title  string        `json:"title" validate:"required,max=30"`
-	Parent string        `json:"parent,omitempty" validate:"omitempty,max=30,alphanum"`
+	Parent string        `json:"parent,omitempty"`
 }
 
 func (*Node) parse(body []byte) (*Node, error) {
@@ -21,7 +21,7 @@ func (*Node) parse(body []byte) (*Node, error) {
 }
 
 // 添加节点
-func (n *Node) Add(db *Database, req *Request) Value {
+func (n *Node) Add(ps *Pubsub, db *Database, req *Request) Value {
 	node, _ := n.parse(req.Body)
 	if err := com.NewVali().Struct(node); err != "" {
 		return &Fail{Msg: err}
@@ -29,7 +29,7 @@ func (n *Node) Add(db *Database, req *Request) Value {
 
 	// 检查父节点
 	if node.Parent != "" {
-		if c, _ := db.C("node").Find(bson.M{"name": node.Parent}).Count(); c < 1 {
+		if c, _ := db.FindId("node", node.Parent).Count(); c != 1 {
 			return &Fail{Msg: "父节点不存在"}
 		}
 	}
@@ -37,6 +37,8 @@ func (n *Node) Add(db *Database, req *Request) Value {
 	if err := db.C("node").Insert(node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
+
+	ps.Publish(&Prot{Mod: "node", Act: "list"})
 	return &Succ{}
 }
 
@@ -47,6 +49,26 @@ func (n *Node) List(db *Database) Value {
 		return &Fail{Msg: err.Error()}
 	}
 	return &Succ{Data: node}
+}
+
+// 删除节点
+func (n *Node) Remove(ps *Pubsub, db *Database, req *Request) Value {
+	node, _ := n.parse(req.Body)
+
+	if node.Id == "" {
+		return &Fail{Msg: "ID 不能为空"}
+	}
+
+	if c, _ := db.C("node").Find(bson.M{"parent": node.Id.Hex()}).Count(); c > 0 {
+		return &Fail{Msg: "删除失败: 该节点下有子节点存在"}
+	}
+
+	if err := db.C("node").RemoveId(node.Id); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	ps.Publish(&Prot{Mod: "node", Act: "list"})
+	return &Succ{}
 }
 
 // 检查是否有相同节点存在
