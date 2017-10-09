@@ -16,7 +16,7 @@ func main() {
 	// 发布订阅
 	APP.Ps = NewPubsub()
 	// 数据库
-	APP.Db = NewDatabase(APP.Conf.Db.Host, APP.Conf.Db.Database, APP.Conf.Db.Port)
+	APP.Db = NewDatabase()
 
 	// ws 服务
 	APP.Server = NewServer()

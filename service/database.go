@@ -6,16 +6,12 @@ import (
 )
 
 type Database struct {
-	config struct {
-		name, host string
-		port       int
-	}
 	Session *mgo.Session
 }
 
 // 建立连接
 func (d *Database) connect() {
-	ses, err := mgo.Dial(fmt.Sprintf("%s:%d", d.config.host, d.config.port))
+	ses, err := mgo.Dial(fmt.Sprintf("%s:%d", APP.Conf.Db.Host, APP.Conf.Db.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -26,14 +22,12 @@ func (d *Database) connect() {
 
 // 获得 Collection 实例
 func (d *Database) C(name string) *mgo.Collection {
-	return d.Session.DB(d.config.name).C(name)
+	return d.Session.DB(APP.Conf.Db.Database).C(name)
 }
 
 // 获得 Database 实例
-func NewDatabase(host, name string, port int) *Database {
+func NewDatabase() *Database {
 	db := &Database{}
-	db.config.name, db.config.host, db.config.port = name, host, port
-
 	db.connect()
 	return db
 }

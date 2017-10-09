@@ -16,7 +16,14 @@ func (*Sub) parse(body []byte) (*Prot, error) {
 // 添加订阅
 func (s *Sub) Add(ps *Pubsub, req *Request, res *Response) {
 	if prot, err := s.parse(req.Body); err == nil {
+
+		v, e := NewModule(res.Client).LoadProt(prot)
+		if v != nil && e == nil {
+			res.Write(res.Pack(*prot, v))
+		}
+
 		ps.AddSub(prot, res)
+
 	}
 }
 
@@ -25,8 +32,4 @@ func (s *Sub) Remove(ps *Pubsub, req *Request, res *Response) {
 	if prot, err := s.parse(req.Body); err == nil {
 		ps.RemoveSub(prot, res)
 	}
-}
-
-func (s *Sub) Pub(ps *Pubsub) {
-	ps.Publish("node_list")
 }
