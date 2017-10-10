@@ -19,6 +19,8 @@ func main() {
 	APP.Ps = NewPubsub()
 	// 数据库
 	APP.Db = NewDatabase()
+	// Session
+	APP.Session = NewSession(nil)
 
 	// ws 服务
 	APP.Server = NewServer()

@@ -1,6 +1,11 @@
 package module
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"fmt"
+	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Topic struct {
 	Id bson.ObjectId `json:"id" bson:"_id,omitempty"`
@@ -23,4 +28,13 @@ func (*Topic) parse() {
 // 发表新主题
 func (t *Topic) New() {
 
+}
+
+func (t *Topic) Test1(ses *Session) {
+	ses.Set("name", "yazi")
+}
+
+func (t *Topic) Test2(ses *Session) Value {
+	fmt.Println(ses.Get("name"))
+	return ses.Get("name")
 }

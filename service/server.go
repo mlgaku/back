@@ -38,6 +38,7 @@ func (s *Server) Watch(han func(*Client, []byte)) {
 					for k := range APP.Ps.list {
 						delete(APP.Ps.list[k], client.Connection)
 					}
+					APP.Session.Destroy(client.Connection)
 				}()
 			}
 

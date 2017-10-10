@@ -105,6 +105,8 @@ func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 		switch n := strings.TrimLeft(path.Ext(t.String()), "."); n {
 		case "Module":
 			args = append(args, reflect.ValueOf(m))
+		case "Session":
+			args = append(args, reflect.ValueOf(NewSession(m.cli.Connection)))
 		case "Request":
 			args = append(args, reflect.ValueOf(NewRequest([]byte(m.Prot.Body), m.cli)))
 		case "Response":
