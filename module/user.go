@@ -44,7 +44,7 @@ func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 }
 
 // 登录
-func (u *User) Login(db *Database, req *Request, conf *Config) Value {
+func (u *User) Login(db *Database, req *Request, ses *Session, conf *Config) Value {
 	user, _ := u.parse(req.Body)
 
 	err := com.NewVali().Each(com.Iter(user.Name, user.Password), []string{"required"})
@@ -65,7 +65,13 @@ func (u *User) Login(db *Database, req *Request, conf *Config) Value {
 		return &Fail{Msg: "用户名与密码不匹配"}
 	}
 
+	// 保存状态
+	ses.Set("user_id", result.Id)
+	ses.Set("user_name", result.Name)
+	ses.Set("user_email", result.Email)
+
 	return &Succ{Data: &User{
+		Id:    result.Id,
 		Name:  result.Name,
 		Email: result.Email,
 	}}
