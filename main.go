@@ -11,6 +11,8 @@ func main() {
 
 	// 路由
 	APP.Route = conf.Route
+	// 中间件
+	APP.Middleware = conf.Middleware
 	// 配置
 	APP.Conf = NewConfig()
 	// 发布订阅

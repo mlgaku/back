@@ -52,12 +52,39 @@ func (m *Module) invoke() (types.Value, error) {
 		return nil, fmt.Errorf("%s method does not exist", m.Prot.Act)
 	}
 
+	if err := m.middle(); err != nil {
+		return nil, err
+	}
+
 	res := mth.Call(m.inject(&mth))
 	if len(res) > 0 {
 		return res[0].Interface(), nil
 	}
 
 	return nil, nil
+}
+
+// 中间件
+func (m *Module) middle() error {
+	w, ok := APP.Middleware[m.Prot.Mod]
+	if !ok {
+		return nil
+	}
+
+	for _, v := range w {
+		fn := reflect.ValueOf(v)
+		res := fn.Call(m.inject(&fn))
+
+		if len(res) < 1 {
+			continue
+		}
+
+		if err, ok := res[0].Interface().(error); ok && err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // 依赖注入

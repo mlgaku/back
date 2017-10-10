@@ -8,5 +8,6 @@ type App struct {
 	Conf   *Config
 	Server *Server
 
-	Route map[string]interface{}
+	Route      map[string]interface{}
+	Middleware map[string][]interface{}
 }
