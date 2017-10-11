@@ -55,3 +55,13 @@ func (t *Topic) New(db *Database, ses *Session, req *Request) Value {
 
 	return &Succ{Data: topic.Id}
 }
+
+// 主题列表
+func (t *Topic) List(db *Database, req *Request) Value {
+	m := map[string]int{}
+	json.Unmarshal(req.Body, &m)
+
+	topic := &[]Topic{}
+	db.C("topic").Find(nil).Skip(m["page"] * 20).Limit(20).All(topic)
+	return &Succ{Data: topic}
+}
