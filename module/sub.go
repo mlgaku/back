@@ -18,10 +18,14 @@ func (s *Sub) Add(ps *Pubsub, req *Request, res *Response) {
 	if prot, err := s.parse(req.Body); err == nil {
 
 		v, e := NewModule(res.Client).LoadProt(prot)
-		if v != nil && e == nil {
-			res.Write(res.Pack(*prot, v))
+		if e != nil {
+			res.Write(res.Pack(*prot, &Fail{Msg: e.Error()}))
+			return
 		}
 
+		if v != nil {
+			res.Write(res.Pack(*prot, v))
+		}
 		ps.AddSub(prot, res)
 
 	}

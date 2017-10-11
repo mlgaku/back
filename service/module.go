@@ -37,6 +37,7 @@ func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 	}
 
 	m.Prot = prot
+	m.Prot.Act = strings.ToLower(m.Prot.Act)
 	return m.invoke()
 }
 
@@ -66,7 +67,7 @@ func (m *Module) invoke() (types.Value, error) {
 
 // 中间件
 func (m *Module) middle() error {
-	w, ok := APP.Middleware[m.Prot.Mod]
+	w, ok := APP.Middleware[m.Prot.Mod+"."+m.Prot.Act]
 	if !ok {
 		return nil
 	}

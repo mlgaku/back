@@ -5,9 +5,7 @@ import (
 	. "github.com/mlgaku/back/service"
 )
 
-type Auth struct{}
-
-func (*Auth) IsLogin() interface{} {
+func IsLogin() interface{} {
 	return func(ses *Session) error {
 		if ses.Has("user_id") {
 			return nil
