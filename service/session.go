@@ -17,6 +17,12 @@ func (s *Session) Set(key string, val interface{}) {
 	APP.Session.data[s.conn][key] = val
 }
 
+// 是否存在
+func (s *Session) Has(key string) bool {
+	_, ok := APP.Session.data[s.conn][key]
+	return ok
+}
+
 // 删除
 func (s *Session) Remove(key string) {
 	delete(APP.Session.data[s.conn], key)

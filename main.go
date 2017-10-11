@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/mlgaku/back/conf"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"log"
 	"net/http"
 )
@@ -39,7 +40,7 @@ func handle(cli *Client, prim []byte) {
 
 	val, err := mod.Load(prim)
 	if err != nil {
-		res.Write([]byte(err.Error()))
+		res.Write(res.Pack(*mod.Prot, &Fail{Msg: err.Error()}))
 		return
 	}
 	if val != nil {
