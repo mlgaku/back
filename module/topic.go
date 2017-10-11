@@ -6,6 +6,7 @@ import (
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type Topic struct {
 	Node    string `json:"node" validate:"required,min=20,max=30"`
 	Time    int64  `json:"time"`
 	Title   string `json:"title" validate:"required,min=10,max=50"`
-	Content string `json:"content,omitempty" validate:"omitempty,required,min=30,max=1000"`
+	Content string `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=30,max=1000"`
 
 	Author   string `json:"author"`
 	AuthorId string `json:"author_id"`
@@ -43,6 +44,8 @@ func (t *Topic) New(db *Database, ses *Session, req *Request) Value {
 
 	topic.Id = bson.NewObjectId()
 	topic.Time = time.Now().Unix()
+	topic.Title = strings.Trim(topic.Title, " ")
+	topic.Content = strings.Trim(topic.Content, " ")
 	topic.Author = ses.Get("user_name").(string)
 	topic.AuthorId = ses.Get("user_id").(bson.ObjectId).Hex()
 
