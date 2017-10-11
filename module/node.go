@@ -5,6 +5,7 @@ import (
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -46,6 +47,25 @@ func (n *Node) Add(ps *Pubsub, db *Database, req *Request) Value {
 func (n *Node) List(db *Database) Value {
 	node := &[]Node{}
 	if err := db.C("node").Find(bson.M{}).All(node); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+	return &Succ{Data: node}
+}
+
+// 获取节点信息
+func (n *Node) Info(db *Database, req *Request) Value {
+	node, _ := n.parse(req.Body)
+
+	var f *mgo.Query
+	if node.Id != "" {
+		f = db.C("node").FindId(node.Id)
+	} else if node.Name != "" {
+		f = db.C("node").Find(bson.M{"name": node.Name})
+	} else {
+		return &Fail{Msg: "非法操作"}
+	}
+
+	if err := f.One(node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 	return &Succ{Data: node}
