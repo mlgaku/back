@@ -78,3 +78,17 @@ func (t *Topic) List(db *Database, req *Request) Value {
 	q.Skip(s.Page * 20).Limit(20).All(topic)
 	return &Succ{Data: topic}
 }
+
+// 主题信息
+func (t *Topic) Info(db *Database, req *Request) Value {
+	topic, _ := t.parse(req.Body)
+	if topic.Id == "" {
+		return &Fail{Msg: "未指定主题ID"}
+	}
+
+	if err := db.C("topic").FindId(topic.Id).One(topic); err != nil {
+		return &Fail{Msg: "主题信息获取失败"}
+	}
+
+	return &Succ{Data: topic}
+}
