@@ -5,6 +5,7 @@ import (
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -58,10 +59,22 @@ func (t *Topic) New(db *Database, ses *Session, req *Request) Value {
 
 // 主题列表
 func (t *Topic) List(db *Database, req *Request) Value {
-	m := map[string]int{}
-	json.Unmarshal(req.Body, &m)
+	var s struct {
+		Page int
+		Node string
+	}
+	if err := json.Unmarshal(req.Body, &s); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	var q *mgo.Query
+	if s.Node == "" {
+		q = db.C("topic").Find(nil)
+	} else {
+		q = db.C("topic").Find(bson.M{"node": s.Node})
+	}
 
 	topic := &[]Topic{}
-	db.C("topic").Find(nil).Skip(m["page"] * 20).Limit(20).All(topic)
+	q.Skip(s.Page * 20).Limit(20).All(topic)
 	return &Succ{Data: topic}
 }
