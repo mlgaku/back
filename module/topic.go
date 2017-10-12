@@ -17,7 +17,7 @@ type Topic struct {
 	Node    string `json:"node" validate:"required,min=20,max=30"`
 	Time    int64  `json:"time"`
 	Title   string `json:"title" validate:"required,min=10,max=50"`
-	Content string `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=30,max=1000"`
+	Content string `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=20,max=5000"`
 
 	Author   string `json:"author"`
 	AuthorId string `json:"author_id" bson:"author_id"`
