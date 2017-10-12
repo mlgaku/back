@@ -13,4 +13,6 @@ var Route = map[string]interface{}{
 
 	"topic":  &module.Topic{},
 	"replay": &module.Replay{},
+
+	"notice": &module.Notice{},
 }

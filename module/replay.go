@@ -29,12 +29,12 @@ func (*Replay) parse(body []byte) (*Replay, error) {
 // 添加新回复
 func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value {
 	replay, _ := r.parse(req.Body)
-
 	if err := com.NewVali().Struct(replay); err != "" {
 		return &Fail{Msg: err}
 	}
 
-	if c, _ := db.FindId("topic", replay.Topic).Count(); c != 1 {
+	topic := &Topic{}
+	if err := db.FindId("topic", replay.Topic).One(topic); err != nil {
 		return &Fail{Msg: "回复主题不存在"}
 	}
 
@@ -47,7 +47,17 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 		return &Fail{Msg: err.Error()}
 	}
 
+	// 添加通知
+	db.C("notice").Insert(&Notice{
+		Type:       1,
+		Master:     topic.AuthorId,
+		User:       replay.Author,
+		TopicID:    replay.Topic,
+		TopicTitle: topic.Title,
+	})
+
 	ps.Publish(&Prot{Mod: "replay", Act: "list"})
+	ps.Publish(&Prot{Mod: "notice", Act: "list"})
 	return &Succ{}
 }
 
