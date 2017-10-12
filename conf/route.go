@@ -11,5 +11,6 @@ var Route = map[string]interface{}{
 	"user": &module.User{},
 	"node": &module.Node{},
 
-	"topic": &module.Topic{},
+	"topic":  &module.Topic{},
+	"replay": &module.Replay{},
 }
