@@ -16,7 +16,7 @@ type Replay struct {
 	Topic string        `json:"topic" validate:"required,min=20,max=30"`
 
 	Author   string `json:"author"`
-	AuthorId string `json:"author_id"`
+	AuthorId string `json:"author_id" bson:"author_id"`
 
 	Content string `json:"content" validate:"required,min=8,max=100"`
 }

@@ -15,8 +15,8 @@ type User struct {
 	Email    string        `json:"email" validate:"required,min=8,max=30,email"`
 	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
 
-	RegIP   string `json:"reg_ip,omitempty"`
-	RegTime int64  `json:"reg_time,omitempty"`
+	RegIP   string `json:"reg_ip,omitempty" bson:"reg_ip"`
+	RegTime int64  `json:"reg_time,omitempty" bson:"reg_time"`
 }
 
 func (*User) parse(body []byte) (*User, error) {

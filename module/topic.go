@@ -20,7 +20,7 @@ type Topic struct {
 	Content string `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=30,max=1000"`
 
 	Author   string `json:"author"`
-	AuthorId string `json:"author_id"`
+	AuthorId string `json:"author_id" bson:"author_id"`
 
 	Views   uint64 `json:"views"`
 	Replies uint64 `json:"replies"`
