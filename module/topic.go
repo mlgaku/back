@@ -75,7 +75,7 @@ func (t *Topic) List(db *Database, req *Request) Value {
 	}
 
 	topic := &[]Topic{}
-	q.Skip(s.Page * 20).Limit(20).All(topic)
+	q.Skip(s.Page * 20).Limit(20).Select(bson.M{"content": 0}).All(topic)
 	return &Succ{Data: topic}
 }
 
