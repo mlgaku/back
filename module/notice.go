@@ -11,6 +11,7 @@ type Notice struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Type   uint64        `json:"type" bson:",minsize"` // 类型(1.回复 2.At)
 	Read   bool          `json:"read"`                 // 已读
+	Time   int64         `json:"time"`                 // 时间
 	Master string        `json:"master,omitempty"`     // 所属者ID
 
 	Msg        string `json:"msg,omitempty" bson:",omitempty"`                            // 通知内容
@@ -34,6 +35,21 @@ func (n *Notice) List(db *Database, req *Request) Value {
 	}
 
 	notices := &[]Notice{}
-	db.C("notice").Find(bson.M{"master": notice.Master}).Select(bson.M{"master": 0}).All(notices)
+	db.C("notice").Find(bson.M{"read": false, "master": notice.Master}).Select(bson.M{"read": 0, "master": 0}).All(notices)
 	return &Succ{Data: notices}
+}
+
+// 移除通知
+func (n *Notice) Remove(ps *Pubsub, db *Database, req *Request) Value {
+	notice, _ := n.parse(req.Body)
+	if notice.Id == "" {
+		return &Fail{Msg: "通知ID不能为空"}
+	}
+
+	if err := db.C("notice").UpdateId(notice.Id, bson.M{"$set": bson.M{"read": true}}); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	ps.Publish(&Prot{Mod: "notice", Act: "list"})
+	return &Succ{}
 }

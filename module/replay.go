@@ -47,14 +47,17 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 		return &Fail{Msg: err.Error()}
 	}
 
-	// 添加通知
-	db.C("notice").Insert(&Notice{
-		Type:       1,
-		Master:     topic.AuthorId,
-		User:       replay.Author,
-		TopicID:    replay.Topic,
-		TopicTitle: topic.Title,
-	})
+	// 回复人不是主题作者时添加通知
+	if replay.AuthorId != topic.AuthorId {
+		db.C("notice").Insert(&Notice{
+			Type:       1,
+			Time:       time.Now().Unix(),
+			Master:     topic.AuthorId,
+			User:       replay.Author,
+			TopicID:    replay.Topic,
+			TopicTitle: topic.Title,
+		})
+	}
 
 	ps.Publish(&Prot{Mod: "replay", Act: "list"})
 	ps.Publish(&Prot{Mod: "notice", Act: "list"})
