@@ -40,7 +40,7 @@ func (t *Topic) List(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	topic, err := t.Paginate(bd, s.Node, 0)
+	topic, err := t.Paginate(bd, s.Node, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}

@@ -2,58 +2,29 @@ package module
 
 import (
 	"encoding/json"
-	com "github.com/mlgaku/back/common"
+	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
-	"time"
 )
 
 type Replay struct {
-	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Time    int64         `json:"time"`
-	Content string        `json:"content" validate:"required,min=8,max=300"`
-
-	Topic  bson.ObjectId `json:"topic" validate:"required"`
-	Author bson.ObjectId `json:"author"`
+	db.Replay
 }
 
-func (*Replay) parse(body []byte) (*Replay, error) {
-	replay := &Replay{}
+func (*Replay) parse(body []byte) (*db.Replay, error) {
+	replay := &db.Replay{}
 	return replay, json.Unmarshal(body, replay)
 }
 
 // 添加新回复
 func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value {
 	replay, _ := r.parse(req.Body)
-	if err := com.NewVali().Struct(replay); err != "" {
-		return &Fail{Msg: err}
-	}
-
-	topic := &Topic{}
-	if err := db.C("topic").FindId(replay.Topic).One(topic); err != nil {
-		return &Fail{Msg: "回复主题不存在"}
-	}
-
-	replay.Time = time.Now().Unix()
 	replay.Author = ses.Get("user_id").(bson.ObjectId)
-	replay.Content = strings.Trim(replay.Content, " ")
+	replay.AuthorName = ses.Get("user_name").(string)
 
-	if err := db.C("replay").Insert(replay); err != nil {
+	if err := r.Add(db, replay); err != nil {
 		return &Fail{Msg: err.Error()}
-	}
-
-	// 回复人不是主题作者时添加通知
-	if replay.Author != topic.Author {
-		db.C("notice").Insert(&Notice{
-			Type:       1,
-			Time:       time.Now().Unix(),
-			Master:     topic.Author,
-			User:       ses.Get("user_name").(string),
-			TopicID:    replay.Topic,
-			TopicTitle: topic.Title,
-		})
 	}
 
 	ps.Publish(&Prot{Mod: "replay", Act: "list"})
@@ -65,17 +36,16 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 func (r *Replay) List(db *Database, req *Request) Value {
 	var s struct {
 		Page  int
-		Topic string
+		Topic bson.ObjectId
 	}
 	if err := json.Unmarshal(req.Body, &s); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if s.Topic == "" {
-		return &Fail{Msg: "主题ID不能为空"}
+	replay, err := r.Paginate(db, s.Topic, s.Page)
+	if err != nil {
+		return &Fail{Msg: err.Error()}
 	}
 
-	replay := &[]Replay{}
-	db.C("replay").Find(bson.M{"topic": s.Topic}).Skip(s.Page * 20).Limit(20).All(replay)
 	return &Succ{Data: replay}
 }

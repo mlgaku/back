@@ -18,11 +18,11 @@ func (*User) parse(body []byte) (*db.User, error) {
 }
 
 // 注册
-func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
+func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 	user, _ := u.parse(req.Body)
 
 	user.RegIP, _ = com.IPAddr(req.Client.Http.RemoteAddr)
-	if err := u.Add(bd, conf, user); err != nil {
+	if err := u.Add(db, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -62,10 +62,10 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 }
 
 // 检查用户名是否已被注册
-func (u *User) Check(bd *Database, req *Request) Value {
+func (u *User) Check(db *Database, req *Request) Value {
 	user, _ := u.parse(req.Body)
 
-	b, err := u.NameExists(bd, user.Name)
+	b, err := u.NameExists(db, user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}

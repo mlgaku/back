@@ -46,6 +46,19 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 	return topic.Id, nil
 }
 
+// 查询
+func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
+	if id == "" {
+		return errors.New("未指定主题ID")
+	}
+
+	if err := db.C("topic").FindId(id).One(topic); err != nil {
+		return errors.New("主题信息获取失败")
+	}
+
+	return nil
+}
+
 // 分页查询
 func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, error) {
 	var q *mgo.Query
@@ -61,17 +74,4 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 	}
 
 	return topic, nil
-}
-
-// 查询
-func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
-	if id == "" {
-		return errors.New("未指定主题ID")
-	}
-
-	if err := db.C("topic").FindId(id).One(topic); err != nil {
-		return errors.New("主题信息获取失败")
-	}
-
-	return nil
 }
