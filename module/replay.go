@@ -11,14 +11,12 @@ import (
 )
 
 type Replay struct {
-	Id    bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Time  int64         `json:"time"`
-	Topic string        `json:"topic" validate:"required,min=20,max=30"`
+	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Time    int64         `json:"time"`
+	Content string        `json:"content" validate:"required,min=8,max=300"`
 
-	Author   string `json:"author"`
-	AuthorId string `json:"author_id" bson:"author_id"`
-
-	Content string `json:"content" validate:"required,min=8,max=100"`
+	Topic  bson.ObjectId `json:"topic" validate:"required"`
+	Author bson.ObjectId `json:"author"`
 }
 
 func (*Replay) parse(body []byte) (*Replay, error) {
@@ -34,13 +32,12 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 	}
 
 	topic := &Topic{}
-	if err := db.FindId("topic", replay.Topic).One(topic); err != nil {
+	if err := db.C("topic").FindId(replay.Topic).One(topic); err != nil {
 		return &Fail{Msg: "回复主题不存在"}
 	}
 
 	replay.Time = time.Now().Unix()
-	replay.Author = ses.Get("user_name").(string)
-	replay.AuthorId = ses.Get("user_id").(bson.ObjectId).Hex()
+	replay.Author = ses.Get("user_id").(bson.ObjectId)
 	replay.Content = strings.Trim(replay.Content, " ")
 
 	if err := db.C("replay").Insert(replay); err != nil {
@@ -48,12 +45,12 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 	}
 
 	// 回复人不是主题作者时添加通知
-	if replay.AuthorId != topic.AuthorId {
+	if replay.Author != topic.Author {
 		db.C("notice").Insert(&Notice{
 			Type:       1,
 			Time:       time.Now().Unix(),
-			Master:     topic.AuthorId,
-			User:       replay.Author,
+			Master:     topic.Author,
+			User:       ses.Get("user_name").(string),
 			TopicID:    replay.Topic,
 			TopicTitle: topic.Title,
 		})

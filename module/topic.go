@@ -12,15 +12,13 @@ import (
 )
 
 type Topic struct {
-	Id bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Time    int64         `json:"time"`
+	Title   string        `json:"title" validate:"required,min=10,max=50"`
+	Content string        `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=20,max=5000"`
 
-	Node    string `json:"node" validate:"required,min=20,max=30"`
-	Time    int64  `json:"time"`
-	Title   string `json:"title" validate:"required,min=10,max=50"`
-	Content string `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=20,max=5000"`
-
-	Author   string `json:"author"`
-	AuthorId string `json:"author_id" bson:"author_id"`
+	Node   bson.ObjectId `json:"node" validate:"required"`
+	Author bson.ObjectId `json:"author"`
 
 	Views   uint64 `json:"views"`
 	Replies uint64 `json:"replies"`
@@ -39,7 +37,7 @@ func (t *Topic) New(db *Database, ses *Session, req *Request) Value {
 		return &Fail{Msg: err}
 	}
 
-	if c, _ := db.FindId("node", topic.Node).Count(); c != 1 {
+	if c, _ := db.C("node").FindId(topic.Node).Count(); c != 1 {
 		return &Fail{Msg: "所选节点不存在"}
 	}
 
@@ -47,8 +45,7 @@ func (t *Topic) New(db *Database, ses *Session, req *Request) Value {
 	topic.Time = time.Now().Unix()
 	topic.Title = strings.Trim(topic.Title, " ")
 	topic.Content = strings.Trim(topic.Content, " ")
-	topic.Author = ses.Get("user_name").(string)
-	topic.AuthorId = ses.Get("user_id").(bson.ObjectId).Hex()
+	topic.Author = ses.Get("user_id").(bson.ObjectId)
 
 	if err := db.C("topic").Insert(topic); err != nil {
 		return &Fail{Msg: err.Error()}

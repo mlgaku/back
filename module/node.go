@@ -13,7 +13,7 @@ type Node struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Name   string        `json:"name" validate:"required,max=30,alphanum"`
 	Title  string        `json:"title" validate:"required,max=30"`
-	Parent string        `json:"parent,omitempty"`
+	Parent bson.ObjectId `json:"parent,omitempty"`
 }
 
 func (*Node) parse(body []byte) (*Node, error) {
@@ -30,7 +30,7 @@ func (n *Node) Add(ps *Pubsub, db *Database, req *Request) Value {
 
 	// 检查父节点
 	if node.Parent != "" {
-		if c, _ := db.FindId("node", node.Parent).Count(); c != 1 {
+		if c, _ := db.C("node").FindId(node.Parent).Count(); c != 1 {
 			return &Fail{Msg: "父节点不存在"}
 		}
 	}
