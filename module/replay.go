@@ -6,6 +6,7 @@ import (
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type Replay struct {
@@ -18,13 +19,30 @@ func (*Replay) parse(body []byte) (*db.Replay, error) {
 }
 
 // 添加新回复
-func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value {
+func (r *Replay) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
 	replay, _ := r.parse(req.Body)
 	replay.Author = ses.Get("user_id").(bson.ObjectId)
 	replay.AuthorName = ses.Get("user_name").(string)
 
-	if err := r.Db.Add(db, replay); err != nil {
+	topic := &db.Topic{}
+	if err := topic.Find(bd, replay.Topic, topic); err != nil {
 		return &Fail{Msg: err.Error()}
+	}
+
+	if err := r.Db.Add(bd, replay); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	// 回复人不是主题作者时添加通知
+	if replay.Author != topic.Author {
+		new(db.Notice).Add(bd, &db.Notice{
+			Type:       1,
+			Time:       time.Now(),
+			Master:     topic.Author,
+			User:       replay.AuthorName,
+			TopicID:    replay.Topic,
+			TopicTitle: topic.Title,
+		})
 	}
 
 	ps.Publish(&Prot{Mod: "replay", Act: "list"})

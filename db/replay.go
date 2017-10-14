@@ -25,28 +25,10 @@ func (*Replay) Add(db *Database, replay *Replay) error {
 		return errors.New(err)
 	}
 
-	topic := &Topic{}
-	if err := db.C("topic").FindId(replay.Topic).One(topic); err != nil {
-		return errors.New("回复的主题不存在")
-	}
-
 	replay.Time = time.Now()
 	replay.Content = strings.Trim(replay.Content, " ")
 	if err := db.C("replay").Insert(replay); err != nil {
 		return err
-	}
-
-	// 回复人不是主题作者时添加通知
-	if replay.Author != topic.Author {
-		new(Notice).Add(db, &Notice{
-			Type:       1,
-			Time:       time.Now(),
-			Master:     topic.Author,
-			User:       replay.AuthorName,
-			TopicID:    replay.Topic,
-			TopicTitle: topic.Title,
-		})
-
 	}
 
 	return nil
