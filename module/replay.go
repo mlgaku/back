@@ -9,7 +9,7 @@ import (
 )
 
 type Replay struct {
-	db.Replay
+	Db db.Replay
 }
 
 func (*Replay) parse(body []byte) (*db.Replay, error) {
@@ -23,7 +23,7 @@ func (r *Replay) New(db *Database, ps *Pubsub, ses *Session, req *Request) Value
 	replay.Author = ses.Get("user_id").(bson.ObjectId)
 	replay.AuthorName = ses.Get("user_name").(string)
 
-	if err := r.Add(db, replay); err != nil {
+	if err := r.Db.Add(db, replay); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -42,7 +42,7 @@ func (r *Replay) List(db *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	replay, err := r.Paginate(db, s.Topic, s.Page)
+	replay, err := r.Db.Paginate(db, s.Topic, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}

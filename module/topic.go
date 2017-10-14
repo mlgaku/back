@@ -9,7 +9,7 @@ import (
 )
 
 type Topic struct {
-	db.Topic
+	Db db.Topic
 }
 
 func (*Topic) parse(body []byte) (*db.Topic, error) {
@@ -22,7 +22,7 @@ func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
 	topic, _ := t.parse(req.Body)
 	topic.Author = ses.Get("user_id").(bson.ObjectId)
 
-	id, err := t.Add(bd, topic)
+	id, err := t.Db.Add(bd, topic)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -40,7 +40,7 @@ func (t *Topic) List(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	topic, err := t.Paginate(bd, s.Node, s.Page)
+	topic, err := t.Db.Paginate(bd, s.Node, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -52,7 +52,7 @@ func (t *Topic) List(bd *Database, req *Request) Value {
 func (t *Topic) Info(db *Database, req *Request) Value {
 	topic, _ := t.parse(req.Body)
 
-	if err := t.Find(db, topic.Id, topic); err != nil {
+	if err := t.Db.Find(db, topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

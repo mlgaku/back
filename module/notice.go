@@ -8,7 +8,7 @@ import (
 )
 
 type Notice struct {
-	db.Notice
+	Db db.Notice
 }
 
 func (*Notice) parse(body []byte) (*db.Notice, error) {
@@ -20,7 +20,7 @@ func (*Notice) parse(body []byte) (*db.Notice, error) {
 func (n *Notice) List(db *Database, req *Request) Value {
 	notice, _ := n.parse(req.Body)
 
-	dat, err := n.FindByMaster(db, notice.Master)
+	dat, err := n.Db.FindByMaster(db, notice.Master)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -32,7 +32,7 @@ func (n *Notice) List(db *Database, req *Request) Value {
 func (n *Notice) Remove(ps *Pubsub, db *Database, req *Request) Value {
 	notice, _ := n.parse(req.Body)
 
-	if err := n.ChangeReadById(db, notice.Id, true); err != nil {
+	if err := n.Db.ChangeReadById(db, notice.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 type User struct {
-	db.User
+	Db db.User
 }
 
 func (*User) parse(body []byte) (*db.User, error) {
@@ -22,7 +22,7 @@ func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 	user, _ := u.parse(req.Body)
 
 	user.RegIP, _ = com.IPAddr(req.Client.Http.RemoteAddr)
-	if err := u.Add(db, conf, user); err != nil {
+	if err := u.Db.Add(db, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -40,7 +40,7 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "用户名不存在"}
 	}
 
-	result, err := u.FindByName(bd, user.Name)
+	result, err := u.Db.FindByName(bd, user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -65,7 +65,7 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 func (u *User) Check(db *Database, req *Request) Value {
 	user, _ := u.parse(req.Body)
 
-	b, err := u.NameExists(db, user.Name)
+	b, err := u.Db.NameExists(db, user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
