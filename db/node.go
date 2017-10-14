@@ -16,18 +16,9 @@ type Node struct {
 }
 
 // 添加
-func (n *Node) Add(db *Database, node *Node) error {
+func (*Node) Add(db *Database, node *Node) error {
 	if err := com.NewVali().Struct(node); err != "" {
 		return errors.New(err)
-	}
-
-	// 检查父节点
-	if node.Parent != "" {
-		if b, err := n.IdExists(db, node.Parent); err != nil {
-			return err
-		} else if !b {
-			return errors.New("父节点不存在")
-		}
 	}
 
 	if err := db.C("node").Insert(node); err != nil {
@@ -101,15 +92,9 @@ func (*Node) FindByIdOrName(db *Database, node *Node) error {
 	return nil
 }
 
-func (n *Node) RemoveById(db *Database, id bson.ObjectId) error {
+func (*Node) RemoveById(db *Database, id bson.ObjectId) error {
 	if id == "" {
 		return errors.New("ID 不能为空")
-	}
-
-	if b, err := n.HasChild(db, id); err != nil {
-		return err
-	} else if b {
-		return errors.New("删除失败: 该节点下有子节点存在")
 	}
 
 	if err := db.C("node").RemoveId(id); err != nil {

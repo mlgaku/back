@@ -20,6 +20,15 @@ func (*Node) parse(body []byte) (*db.Node, error) {
 func (n *Node) Add(ps *Pubsub, db *Database, req *Request) Value {
 	node, _ := n.parse(req.Body)
 
+	// 检查父节点
+	if node.Parent != "" {
+		if b, err := n.Db.IdExists(db, node.Parent); err != nil {
+			return &Fail{Msg: err.Error()}
+		} else if !b {
+			return &Fail{Msg: "父节点不存在"}
+		}
+	}
+
 	if err := n.Db.Add(db, node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -51,6 +60,14 @@ func (n *Node) Info(db *Database, req *Request) Value {
 // 删除节点
 func (n *Node) Remove(ps *Pubsub, db *Database, req *Request) Value {
 	node, _ := n.parse(req.Body)
+
+	// 检查子节点
+	if b, err := n.Db.HasChild(db, node.Id); err != nil {
+		return &Fail{Msg: err.Error()}
+	} else if b {
+		return &Fail{Msg: "删除失败: 该节点下有子节点存在"}
+	}
+
 	if err := n.Db.RemoveById(db, node.Id); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
