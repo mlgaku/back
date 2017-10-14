@@ -4,7 +4,6 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -21,6 +20,10 @@ type Topic struct {
 
 	Views   uint64 `json:"views"`
 	Replies uint64 `json:"replies"`
+
+	User struct {
+		Name string `json:"name"`
+	} `json:"user,omitempty" bson:",omitempty"`
 }
 
 // 添加
@@ -56,20 +59,31 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 		return errors.New("主题信息获取失败")
 	}
 
+	if err := new(User).Find(db, topic.Author, &topic.User); err != nil {
+		return errors.New("用户信息获取失败")
+	}
+
 	return nil
 }
 
 // 分页查询
 func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, error) {
-	var q *mgo.Query
-	if node == "" {
-		q = db.C("topic").Find(nil)
-	} else {
-		q = db.C("topic").Find(bson.M{"node": node})
+	line := []bson.M{
+		bson.M{"$skip": page * 20},
+		bson.M{"$limit": 20},
+		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		bson.M{"$unwind": "$user"},
+		bson.M{"$project": bson.M{"time": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "user.name": 1}},
+	}
+
+	if node != "" {
+		line = append([]bson.M{
+			bson.M{"$match": bson.M{"node": node}},
+		}, line[:]...)
 	}
 
 	topic := &[]Topic{}
-	if err := q.Skip(page * 20).Limit(20).Select(bson.M{"content": 0}).All(topic); err != nil {
+	if err := db.C("topic").Pipe(line).All(topic); err != nil {
 		return nil, err
 	}
 

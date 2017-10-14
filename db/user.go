@@ -33,6 +33,11 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 	return nil
 }
 
+// 查询
+func (*User) Find(db *Database, id bson.ObjectId, user interface{}) error {
+	return db.C("user").FindId(id).One(user)
+}
+
 // 通过用户名查询
 func (*User) FindByName(db *Database, name string) (*User, error) {
 	if name == "" {

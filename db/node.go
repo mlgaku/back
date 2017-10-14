@@ -12,7 +12,7 @@ type Node struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Name   string        `json:"name" validate:"required,max=30,alphanum"`
 	Title  string        `json:"title" validate:"required,max=30"`
-	Parent bson.ObjectId `json:"parent,omitempty"`
+	Parent bson.ObjectId `json:"parent,omitempty" bson:",omitempty"`
 }
 
 // 添加
