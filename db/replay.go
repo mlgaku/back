@@ -14,9 +14,12 @@ type Replay struct {
 	Time    time.Time     `json:"time"`
 	Content string        `json:"content" validate:"required,min=8,max=300"`
 
-	Topic      bson.ObjectId `json:"topic" validate:"required"`
-	Author     bson.ObjectId `json:"author"`
-	AuthorName string        `json:"author_name" bson:"author_name"`
+	Topic  bson.ObjectId `json:"topic,omitempty" validate:"required"`
+	Author bson.ObjectId `json:"author"`
+
+	User struct {
+		Name string `json:"name"`
+	} `json:"user,omitempty" bson:",omitempty"`
 }
 
 // 添加
@@ -40,8 +43,17 @@ func (*Replay) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Replay,
 		return nil, errors.New("主题ID不能为空")
 	}
 
+	line := []bson.M{
+		bson.M{"$match": bson.M{"topic": topic}},
+		bson.M{"$skip": page * 20},
+		bson.M{"$limit": 20},
+		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		bson.M{"$unwind": "$user"},
+		bson.M{"$project": bson.M{"time": 1, "content": 1, "author": 1, "user.name": 1}},
+	}
+
 	replay := &[]Replay{}
-	if err := db.C("replay").Find(bson.M{"topic": topic}).Skip(page * 20).Limit(20).All(replay); err != nil {
+	if err := db.C("replay").Pipe(line).All(replay); err != nil {
 		return nil, err
 	}
 

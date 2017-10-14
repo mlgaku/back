@@ -22,7 +22,6 @@ func (*Replay) parse(body []byte) (*db.Replay, error) {
 func (r *Replay) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
 	replay, _ := r.parse(req.Body)
 	replay.Author = ses.Get("user_id").(bson.ObjectId)
-	replay.AuthorName = ses.Get("user_name").(string)
 
 	topic := &db.Topic{}
 	if err := topic.Find(bd, replay.Topic, topic); err != nil {
@@ -39,7 +38,7 @@ func (r *Replay) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value
 			Type:       1,
 			Time:       time.Now(),
 			Master:     topic.Author,
-			User:       replay.AuthorName,
+			User:       ses.Get("user_name").(string),
 			TopicID:    replay.Topic,
 			TopicTitle: topic.Title,
 		})
