@@ -74,7 +74,7 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 		bson.M{"$limit": 20},
 		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		bson.M{"$unwind": "$user"},
-		bson.M{"$project": bson.M{"time": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "user.name": 1}},
+		bson.M{"$project": bson.M{"time": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1}},
 	}
 
 	if node != "" {
@@ -91,8 +91,8 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 	return topic, nil
 }
 
-// 更新评论
-func (*Topic) UpdateReplay(db *Database, id bson.ObjectId, name string) error {
+// 更新回复
+func (*Topic) UpdateReply(db *Database, id bson.ObjectId, name string) error {
 	switch {
 	case id == "":
 		return errors.New("主题ID不能为空")

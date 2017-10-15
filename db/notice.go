@@ -14,12 +14,12 @@ type Notice struct {
 	Time   time.Time     `json:"time,omitempty"`       // 时间
 	Master bson.ObjectId `json:"master,omitempty"`     // 所属者ID
 
-	Msg        string        `json:"msg,omitempty" bson:",omitempty"`                            // 通知内容
-	User       string        `json:"user,omitempty" bson:",omitempty"`                           // 用户名
-	TopicID    bson.ObjectId `json:"topic_id,omitempty" bson:"topic_id,omitempty"`               // (回复)主题ID
-	TopicTitle string        `json:"topic_title,omitempty" bson:"topic_title,omitempty"`         // (回复)主题标题
-	ReplayID   bson.ObjectId `json:"replay_id,omitempty" bson:"replay_id,omitempty"`             // (At)回复ID
-	ReplayPage uint64        `json:"replay_page,omitempty" bson:"replay_page,minsize,omitempty"` // (At)回复页数
+	Msg        string        `json:"msg,omitempty" bson:",omitempty"`                          // 通知内容
+	User       string        `json:"user,omitempty" bson:",omitempty"`                         // 用户名
+	TopicID    bson.ObjectId `json:"topic_id,omitempty" bson:"topic_id,omitempty"`             // (回复)主题ID
+	TopicTitle string        `json:"topic_title,omitempty" bson:"topic_title,omitempty"`       // (回复)主题标题
+	ReplyID    bson.ObjectId `json:"reply_id,omitempty" bson:"reply_id,omitempty"`             // (At)回复ID
+	ReplyPage  uint64        `json:"reply_page,omitempty" bson:"reply_page,minsize,omitempty"` // (At)回复页数
 }
 
 // 添加

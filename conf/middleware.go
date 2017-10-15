@@ -8,7 +8,7 @@ var Middleware = map[string][]interface{}{
 	"topic.new": {
 		ShouldLogin,
 	},
-	"replay.new": {
+	"reply.new": {
 		ShouldLogin,
 	},
 }

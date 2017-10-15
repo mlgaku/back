@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Replay struct {
+type Reply struct {
 	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Time    time.Time     `json:"time"`
 	Content string        `json:"content" validate:"required,min=8,max=300"`
@@ -23,19 +23,19 @@ type Replay struct {
 }
 
 // 添加
-func (*Replay) Add(db *Database, replay *Replay) error {
-	if err := com.NewVali().Struct(replay); err != "" {
+func (*Reply) Add(db *Database, reply *Reply) error {
+	if err := com.NewVali().Struct(reply); err != "" {
 		return errors.New(err)
 	}
 
-	replay.Time = time.Now()
-	replay.Content = strings.Trim(replay.Content, " ")
+	reply.Time = time.Now()
+	reply.Content = strings.Trim(reply.Content, " ")
 
-	return db.C("replay").Insert(replay)
+	return db.C("reply").Insert(reply)
 }
 
 // 分页查询
-func (*Replay) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Replay, error) {
+func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, error) {
 	if topic == "" {
 		return nil, errors.New("主题ID不能为空")
 	}
@@ -49,10 +49,10 @@ func (*Replay) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Replay,
 		bson.M{"$project": bson.M{"time": 1, "content": 1, "author": 1, "user.name": 1}},
 	}
 
-	replay := &[]Replay{}
-	if err := db.C("replay").Pipe(line).All(replay); err != nil {
+	reply := &[]Reply{}
+	if err := db.C("reply").Pipe(line).All(reply); err != nil {
 		return nil, err
 	}
 
-	return replay, nil
+	return reply, nil
 }

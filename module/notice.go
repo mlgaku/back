@@ -12,8 +12,8 @@ type Notice struct {
 }
 
 func (*Notice) parse(body []byte) (*db.Notice, error) {
-	replay := &db.Notice{}
-	return replay, json.Unmarshal(body, replay)
+	reply := &db.Notice{}
+	return reply, json.Unmarshal(body, reply)
 }
 
 // 获取通知列表
