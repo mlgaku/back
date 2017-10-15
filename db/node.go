@@ -24,7 +24,7 @@ func (*Node) Add(db *Database, node *Node) error {
 	return db.C("node").Insert(node)
 }
 
-// 查询所有
+// 查找所有
 func (*Node) FindAll(db *Database) (*[]Node, error) {
 	node := &[]Node{}
 	if err := db.C("node").Find(bson.M{}).All(node); err != nil {
@@ -71,7 +71,7 @@ func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
 	return true, nil
 }
 
-// 通过ID或名称查询
+// 通过ID或名称查找
 func (*Node) FindByIdOrName(db *Database, node *Node) error {
 	var q *mgo.Query
 	if node.Id != "" {

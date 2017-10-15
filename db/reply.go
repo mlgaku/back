@@ -11,7 +11,7 @@ import (
 
 type Reply struct {
 	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Time    time.Time     `json:"time"`
+	Date    time.Time     `json:"date"`
 	Content string        `json:"content" validate:"required,min=8,max=300"`
 
 	Topic  bson.ObjectId `json:"topic,omitempty" validate:"required"`
@@ -28,7 +28,7 @@ func (*Reply) Add(db *Database, reply *Reply) error {
 		return errors.New(err)
 	}
 
-	reply.Time = time.Now()
+	reply.Date = time.Now()
 	reply.Content = strings.Trim(reply.Content, " ")
 
 	return db.C("reply").Insert(reply)
@@ -46,7 +46,7 @@ func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, e
 		bson.M{"$limit": 20},
 		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		bson.M{"$unwind": "$user"},
-		bson.M{"$project": bson.M{"time": 1, "content": 1, "author": 1, "user.name": 1}},
+		bson.M{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1}},
 	}
 
 	reply := &[]Reply{}

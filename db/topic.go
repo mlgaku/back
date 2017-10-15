@@ -11,7 +11,7 @@ import (
 
 type Topic struct {
 	Id      bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Time    time.Time     `json:"time"`
+	Date    time.Time     `json:"date"`
 	Title   string        `json:"title" validate:"required,min=10,max=50"`
 	Content string        `json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=20,max=5000"`
 
@@ -39,7 +39,7 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 	}
 
 	topic.Id = bson.NewObjectId()
-	topic.Time = time.Now()
+	topic.Date = time.Now()
 	topic.Title = strings.Trim(topic.Title, " ")
 	topic.Content = strings.Trim(topic.Content, " ")
 
@@ -50,7 +50,7 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 	return topic.Id, nil
 }
 
-// 查询
+// 查找
 func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 	if id == "" {
 		return errors.New("未指定主题ID")
@@ -74,7 +74,7 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 		bson.M{"$limit": 20},
 		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		bson.M{"$unwind": "$user"},
-		bson.M{"$project": bson.M{"time": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1}},
+		bson.M{"$project": bson.M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1}},
 	}
 
 	if node != "" {

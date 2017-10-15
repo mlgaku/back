@@ -31,23 +31,6 @@ func (v *vali) Var(field interface{}, tag string) string {
 	return ""
 }
 
-// 验证多个 var
-func (v *vali) Each(field []interface{}, tag []string) string {
-	var t string
-	for i, x := range field {
-		if len(tag) == 1 {
-			t = tag[0]
-		} else {
-			t = tag[i]
-		}
-
-		if err := v.Var(x, t); err != "" {
-			return err
-		}
-	}
-	return ""
-}
-
 // 验证 struct
 func (v *vali) Struct(s interface{}) string {
 	if err := v.Validate.Struct(s); err != nil {

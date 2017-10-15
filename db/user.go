@@ -15,7 +15,7 @@ type User struct {
 	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
 
 	RegIP   string    `json:"reg_ip,omitempty" bson:"reg_ip"`
-	RegTime time.Time `json:"reg_time,omitempty" bson:"reg_time"`
+	RegDate time.Time `json:"reg_date,omitempty" bson:"reg_date"`
 }
 
 // 添加
@@ -24,18 +24,18 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 		return errors.New(err)
 	}
 
-	user.RegTime = time.Now()
+	user.RegDate = time.Now()
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
 
 	return db.C("user").Insert(user)
 }
 
-// 查询
+// 查找
 func (*User) Find(db *Database, id bson.ObjectId, user interface{}) error {
 	return db.C("user").FindId(id).One(user)
 }
 
-// 通过用户名查询
+// 通过用户名查找
 func (*User) FindByName(db *Database, name string) (*User, error) {
 	if name == "" {
 		return nil, errors.New("用户名不能为空")
@@ -46,6 +46,29 @@ func (*User) FindByName(db *Database, name string) (*User, error) {
 		return nil, errors.New(err.Error())
 	}
 
+	return user, nil
+}
+
+// 通过用户名查找多个
+func (*User) FindByNameMany(db *Database, name []string) (map[string]User, error) {
+	if len(name) < 1 {
+		return nil, nil
+	}
+
+	in, user := []string{}, map[string]User{}
+	for _, v := range name {
+		if _, ok := user[v]; !ok {
+			user[v] = User{}
+			in = append(in, v)
+		}
+	}
+
+	result := []User{}
+	db.C("user").Find(bson.M{"name": bson.M{"$in": in}}).All(&result)
+
+	for _, v := range result {
+		user[v.Name] = v
+	}
 	return user, nil
 }
 

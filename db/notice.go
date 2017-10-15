@@ -11,7 +11,7 @@ type Notice struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Type   uint64        `json:"type" bson:",minsize"` // 类型(1.回复 2.At)
 	Read   bool          `json:"read,omitempty"`       // 已读
-	Time   time.Time     `json:"time,omitempty"`       // 时间
+	Date   time.Time     `json:"date,omitempty"`       // 日期
 	Master bson.ObjectId `json:"master,omitempty"`     // 所属者ID
 
 	Msg        string        `json:"msg,omitempty" bson:",omitempty"`                          // 通知内容
@@ -27,7 +27,7 @@ func (*Notice) Add(db *Database, notice *Notice) error {
 	return db.C("notice").Insert(notice)
 }
 
-// 通过所属者查询
+// 通过所属者查找
 func (*Notice) FindByMaster(db *Database, master bson.ObjectId) (*[]Notice, error) {
 	if master == "" {
 		return nil, errors.New("所属者ID不能为空")

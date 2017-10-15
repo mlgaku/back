@@ -6,6 +6,8 @@ import (
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -40,13 +42,16 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value 
 	if reply.Author != topic.Author {
 		new(db.Notice).Add(bd, &db.Notice{
 			Type:       1,
-			Time:       time.Now(),
+			Date:       time.Now(),
 			Master:     topic.Author,
 			User:       ses.Get("user_name").(string),
 			TopicID:    reply.Topic,
 			TopicTitle: topic.Title,
 		})
 	}
+
+	// 通知被at的人
+	r.handleAt(bd, ses, topic, reply)
 
 	ps.Publish(&Prot{Mod: "reply", Act: "list"})
 	ps.Publish(&Prot{Mod: "notice", Act: "list"})
@@ -69,4 +74,38 @@ func (r *Reply) List(db *Database, req *Request) Value {
 	}
 
 	return &Succ{Data: reply}
+}
+
+// 处理 At
+func (*Reply) handleAt(bd *Database, ses *Session, topic *db.Topic, reply *db.Reply) {
+	match := regexp.MustCompile(`@[a-zA-Z0-9]+`).FindAllString(reply.Content, 5)
+	if match == nil {
+		return
+	}
+
+	for k, v := range match {
+		match[k] = strings.TrimLeft(v, "@")
+	}
+
+	user, err := new(db.User).FindByNameMany(bd, match)
+	if err != nil {
+		return
+	}
+
+	name := ses.Get("user_name").(string)
+	for k, v := range user {
+		// 跳过@自己
+		if k == name {
+			continue
+		}
+
+		new(db.Notice).Add(bd, &db.Notice{
+			Type:       2,
+			Date:       time.Now(),
+			Master:     v.Id,
+			User:       name,
+			TopicID:    reply.Topic,
+			TopicTitle: topic.Title,
+		})
+	}
 }
