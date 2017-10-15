@@ -30,11 +30,8 @@ func (*Replay) Add(db *Database, replay *Replay) error {
 
 	replay.Time = time.Now()
 	replay.Content = strings.Trim(replay.Content, " ")
-	if err := db.C("replay").Insert(replay); err != nil {
-		return err
-	}
 
-	return nil
+	return db.C("replay").Insert(replay)
 }
 
 // 分页查询

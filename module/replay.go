@@ -28,9 +28,13 @@ func (r *Replay) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value
 		return &Fail{Msg: err.Error()}
 	}
 
+	// 添加回复
 	if err := r.Db.Add(bd, replay); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
+
+	// 更新最后回复
+	topic.UpdateReplay(bd, replay.Topic, ses.Get("user_name").(string))
 
 	// 回复人不是主题作者时添加通知
 	if replay.Author != topic.Author {

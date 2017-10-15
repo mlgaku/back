@@ -48,9 +48,5 @@ func (*Notice) ChangeReadById(db *Database, id bson.ObjectId, read bool) error {
 		return errors.New("通知ID不能为空")
 	}
 
-	if err := db.C("notice").UpdateId(id, bson.M{"$set": bson.M{"read": read}}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.C("notice").UpdateId(id, bson.M{"$set": bson.M{"read": read}})
 }

@@ -21,11 +21,7 @@ func (*Node) Add(db *Database, node *Node) error {
 		return errors.New(err)
 	}
 
-	if err := db.C("node").Insert(node); err != nil {
-		return err
-	}
-
-	return nil
+	return db.C("node").Insert(node)
 }
 
 // 查询所有
@@ -86,10 +82,7 @@ func (*Node) FindByIdOrName(db *Database, node *Node) error {
 		return errors.New("ID 或名称不能为空")
 	}
 
-	if err := q.One(node); err != nil {
-		return err
-	}
-	return nil
+	return q.One(node)
 }
 
 func (*Node) RemoveById(db *Database, id bson.ObjectId) error {
@@ -97,9 +90,5 @@ func (*Node) RemoveById(db *Database, id bson.ObjectId) error {
 		return errors.New("ID 不能为空")
 	}
 
-	if err := db.C("node").RemoveId(id); err != nil {
-		return err
-	}
-
-	return nil
+	return db.C("node").RemoveId(id)
 }

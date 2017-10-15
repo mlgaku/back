@@ -26,11 +26,8 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 
 	user.RegTime = time.Now()
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
-	if err := db.C("user").Insert(user); err != nil {
-		return err
-	}
 
-	return nil
+	return db.C("user").Insert(user)
 }
 
 // 查询

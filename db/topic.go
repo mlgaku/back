@@ -21,6 +21,8 @@ type Topic struct {
 	Views   uint64 `json:"views"`
 	Replies uint64 `json:"replies"`
 
+	LastReply string `json:"last_reply,omitempty" bson:"last_reply,omitempty"`
+
 	User struct {
 		Name string `json:"name"`
 	} `json:"user,omitempty" bson:",omitempty"`
@@ -28,7 +30,6 @@ type Topic struct {
 
 // 添加
 func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
-
 	if err := com.NewVali().Struct(topic); err != "" {
 		return "", errors.New(err)
 	}
@@ -88,4 +89,16 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 	}
 
 	return topic, nil
+}
+
+// 更新评论
+func (*Topic) UpdateReplay(db *Database, id bson.ObjectId, name string) error {
+	switch {
+	case id == "":
+		return errors.New("主题ID不能为空")
+	case name == "":
+		return errors.New("最后回复人名字不能为空")
+	}
+
+	return db.C("topic").UpdateId(id, bson.M{"$inc": bson.M{"replies": 1}, "$set": bson.M{"last_reply": name}})
 }
