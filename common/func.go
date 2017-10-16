@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// 获取IP信息
 func IPAddr(a string) (ip string, port int) {
 	s := strings.SplitN(a, ":", 2)
 	if len(s) < 2 {

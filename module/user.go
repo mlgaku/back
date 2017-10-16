@@ -21,7 +21,7 @@ func (*User) parse(body []byte) (*db.User, error) {
 func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 	user, _ := u.parse(req.Body)
 
-	user.RegIP, _ = com.IPAddr(req.Client.Http.RemoteAddr)
+	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
 	if err := u.Db.Add(db, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
