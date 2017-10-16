@@ -13,6 +13,7 @@ type User struct {
 	Name     string        `json:"name" validate:"required,min=4,max=15,alphanum"`
 	Email    string        `json:"email" validate:"required,min=8,max=30,email"`
 	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
+	Identity uint64        `json:"identity,omitempty" bson:",omitempty"`
 
 	RegIP   string    `json:"reg_ip,omitempty" bson:"reg_ip"`
 	RegDate time.Time `json:"reg_date,omitempty" bson:"reg_date"`
