@@ -27,11 +27,10 @@ func main() {
 	APP.Server = NewServer()
 	go APP.Server.Watch(handle)
 
-	http.Handle("/", http.FileServer(http.Dir("static")))
-	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		NewClient(APP.Server, w, r)
 	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
 }
 
 // 处理消息
