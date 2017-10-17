@@ -16,7 +16,7 @@ func ShouldLogin(ses *Session) error {
 
 // 创始人
 func ShouldFounder(ses *Session) error {
-	if ses.Get("user").(db.User).Identity == 2 {
+	if ses.Get("user").(*db.User).Identity == 2 {
 		return nil
 	}
 	return errors.New("你不能执行此操作")
@@ -24,7 +24,7 @@ func ShouldFounder(ses *Session) error {
 
 // 版主
 func ShouldModerator(ses *Session) error {
-	if ses.Get("user").(db.User).Identity >= 1 {
+	if ses.Get("user").(*db.User).Identity >= 1 {
 		return nil
 	}
 	return errors.New("你不能执行此操作")

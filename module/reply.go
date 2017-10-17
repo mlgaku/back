@@ -17,7 +17,7 @@ type Reply struct {
 
 // 添加新回复
 func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
-	user := ses.Get("user").(db.User)
+	user := ses.Get("user").(*db.User)
 
 	reply, _ := db.NewReply(req.Body)
 	reply.Author = user.Id

@@ -15,7 +15,7 @@ type Topic struct {
 // 发表新主题
 func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
 	topic, _ := db.NewTopic(req.Body)
-	topic.Author = ses.Get("user").(db.User).Id
+	topic.Author = ses.Get("user").(*db.User).Id
 
 	id, err := t.Db.Add(bd, topic)
 	if err != nil {
