@@ -1,7 +1,6 @@
 package module
 
 import (
-	"encoding/json"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
@@ -12,17 +11,12 @@ type User struct {
 	Db db.User
 }
 
-func (*User) parse(body []byte) (*db.User, error) {
-	user := &db.User{}
-	return user, json.Unmarshal(body, user)
-}
-
 // 注册
-func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
-	user, _ := u.parse(req.Body)
+func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
+	user, _ := db.NewUser(req.Body)
 
 	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
-	if err := u.Db.Add(db, conf, user); err != nil {
+	if err := u.Db.Add(bd, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -31,7 +25,7 @@ func (u *User) Reg(db *Database, req *Request, conf *Config) Value {
 
 // 登录
 func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Value {
-	user, _ := u.parse(req.Body)
+	user, _ := db.NewUser(req.Body)
 	if user.Password == "" {
 		return &Fail{Msg: "密码不能为空"}
 	}
@@ -62,10 +56,10 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 }
 
 // 检查用户名是否已被注册
-func (u *User) Check(db *Database, req *Request) Value {
-	user, _ := u.parse(req.Body)
+func (u *User) Check(bd *Database, req *Request) Value {
+	user, _ := db.NewUser(req.Body)
 
-	b, err := u.Db.NameExists(db, user.Name)
+	b, err := u.Db.NameExists(bd, user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}

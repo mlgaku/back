@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -23,9 +24,23 @@ type Topic struct {
 
 	LastReply string `json:"last_reply,omitempty" bson:"last_reply,omitempty"`
 
-	User struct {
-		Name string `json:"name"`
-	} `json:"user,omitempty" bson:",omitempty"`
+	User TopicUser `json:"user,omitempty" bson:",omitempty"`
+}
+
+type TopicUser struct {
+	Name string `json:"name"`
+}
+
+// 获得 Topic 实例
+func NewTopic(body []byte) (*Topic, error) {
+	topic := &Topic{}
+	if err := json.Unmarshal(body, topic); err != nil {
+		return nil, err
+	}
+
+	topic.Date, topic.Author, topic.Views, topic.Replies,
+		topic.LastReply, topic.User = time.Now(), "", 0, 0, "", TopicUser{}
+	return topic, nil
 }
 
 // 添加

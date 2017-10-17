@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -13,6 +14,12 @@ type Node struct {
 	Name   string        `json:"name" validate:"required,max=30,alphanum"`
 	Title  string        `json:"title" validate:"required,max=30"`
 	Parent bson.ObjectId `json:"parent,omitempty" bson:",omitempty"`
+}
+
+// 获得 Node 实例
+func NewNode(body []byte) (*Node, error) {
+	node := &Node{}
+	return node, json.Unmarshal(body, node)
 }
 
 // 添加

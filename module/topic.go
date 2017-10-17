@@ -12,14 +12,9 @@ type Topic struct {
 	Db db.Topic
 }
 
-func (*Topic) parse(body []byte) (*db.Topic, error) {
-	topic := &db.Topic{}
-	return topic, json.Unmarshal(body, topic)
-}
-
 // 发表新主题
 func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
-	topic, _ := t.parse(req.Body)
+	topic, _ := db.NewTopic(req.Body)
 	topic.Author = ses.Get("user_id").(bson.ObjectId)
 
 	id, err := t.Db.Add(bd, topic)
@@ -49,10 +44,10 @@ func (t *Topic) List(bd *Database, req *Request) Value {
 }
 
 // 主题信息
-func (t *Topic) Info(db *Database, req *Request) Value {
-	topic, _ := t.parse(req.Body)
+func (t *Topic) Info(bd *Database, req *Request) Value {
+	topic, _ := db.NewTopic(req.Body)
 
-	if err := t.Db.Find(db, topic.Id, topic); err != nil {
+	if err := t.Db.Find(bd, topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

@@ -1,7 +1,6 @@
 package module
 
 import (
-	"encoding/json"
 	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -11,25 +10,20 @@ type Node struct {
 	Db db.Node
 }
 
-func (*Node) parse(body []byte) (*db.Node, error) {
-	user := &db.Node{}
-	return user, json.Unmarshal(body, user)
-}
-
 // 添加节点
-func (n *Node) Add(ps *Pubsub, db *Database, req *Request) Value {
-	node, _ := n.parse(req.Body)
+func (n *Node) Add(ps *Pubsub, bd *Database, req *Request) Value {
+	node, _ := db.NewNode(req.Body)
 
 	// 检查父节点
 	if node.Parent != "" {
-		if b, err := n.Db.IdExists(db, node.Parent); err != nil {
+		if b, err := n.Db.IdExists(bd, node.Parent); err != nil {
 			return &Fail{Msg: err.Error()}
 		} else if !b {
 			return &Fail{Msg: "父节点不存在"}
 		}
 	}
 
-	if err := n.Db.Add(db, node); err != nil {
+	if err := n.Db.Add(bd, node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -48,9 +42,9 @@ func (n *Node) List(db *Database) Value {
 }
 
 // 获取节点信息
-func (n *Node) Info(db *Database, req *Request) Value {
-	node, _ := n.parse(req.Body)
-	if err := n.Db.FindByIdOrName(db, node); err != nil {
+func (n *Node) Info(bd *Database, req *Request) Value {
+	node, _ := db.NewNode(req.Body)
+	if err := n.Db.FindByIdOrName(bd, node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -58,17 +52,17 @@ func (n *Node) Info(db *Database, req *Request) Value {
 }
 
 // 删除节点
-func (n *Node) Remove(ps *Pubsub, db *Database, req *Request) Value {
-	node, _ := n.parse(req.Body)
+func (n *Node) Remove(ps *Pubsub, bd *Database, req *Request) Value {
+	node, _ := db.NewNode(req.Body)
 
 	// 检查子节点
-	if b, err := n.Db.HasChild(db, node.Id); err != nil {
+	if b, err := n.Db.HasChild(bd, node.Id); err != nil {
 		return &Fail{Msg: err.Error()}
 	} else if b {
 		return &Fail{Msg: "删除失败: 该节点下有子节点存在"}
 	}
 
-	if err := n.Db.RemoveById(db, node.Id); err != nil {
+	if err := n.Db.RemoveById(bd, node.Id); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -77,9 +71,9 @@ func (n *Node) Remove(ps *Pubsub, db *Database, req *Request) Value {
 }
 
 // 检查是否有相同节点存在
-func (n *Node) Check(db *Database, req *Request) Value {
-	node, _ := n.parse(req.Body)
-	if b, err := n.Db.NameExists(db, node.Name); err != nil {
+func (n *Node) Check(bd *Database, req *Request) Value {
+	node, _ := db.NewNode(req.Body)
+	if b, err := n.Db.NameExists(bd, node.Name); err != nil {
 		return &Fail{Msg: err.Error()}
 	} else if b {
 		return &Fail{Msg: "已有同名节点存在"}

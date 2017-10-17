@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -19,15 +20,24 @@ type User struct {
 	RegDate time.Time `json:"reg_date,omitempty" bson:"reg_date"`
 }
 
+// 获得 User 实例
+func NewUser(body []byte) (*User, error) {
+	user := &User{}
+	if err := json.Unmarshal(body, user); err != nil {
+		return nil, err
+	}
+
+	user.Identity, user.RegIP, user.RegDate = 0, "", time.Now()
+	return user, nil
+}
+
 // 添加
 func (*User) Add(db *Database, conf *Config, user *User) error {
 	if err := com.NewVali().Struct(user); err != "" {
 		return errors.New(err)
 	}
 
-	user.RegDate = time.Now()
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
-
 	return db.C("user").Insert(user)
 }
 

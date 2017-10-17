@@ -11,16 +11,11 @@ type Notice struct {
 	Db db.Notice
 }
 
-func (*Notice) parse(body []byte) (*db.Notice, error) {
-	reply := &db.Notice{}
-	return reply, json.Unmarshal(body, reply)
-}
-
 // 获取通知列表
-func (n *Notice) List(db *Database, req *Request) Value {
-	notice, _ := n.parse(req.Body)
+func (n *Notice) List(bd *Database, req *Request) Value {
+	notice, _ := db.NewNotice(req.Body)
 
-	dat, err := n.Db.FindByMaster(db, notice.Master)
+	dat, err := n.Db.FindByMaster(bd, notice.Master)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -29,10 +24,10 @@ func (n *Notice) List(db *Database, req *Request) Value {
 }
 
 // 移除通知
-func (n *Notice) Remove(ps *Pubsub, db *Database, req *Request) Value {
-	notice, _ := n.parse(req.Body)
+func (n *Notice) Remove(ps *Pubsub, bd *Database, req *Request) Value {
+	notice, _ := db.NewNotice(req.Body)
 
-	if err := n.Db.ChangeReadById(db, notice.Id, true); err != nil {
+	if err := n.Db.ChangeReadById(bd, notice.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

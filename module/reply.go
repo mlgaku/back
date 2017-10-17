@@ -15,14 +15,9 @@ type Reply struct {
 	Db db.Reply
 }
 
-func (*Reply) parse(body []byte) (*db.Reply, error) {
-	reply := &db.Reply{}
-	return reply, json.Unmarshal(body, reply)
-}
-
 // 添加新回复
 func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
-	reply, _ := r.parse(req.Body)
+	reply, _ := db.NewReply(req.Body)
 	reply.Author = ses.Get("user_id").(bson.ObjectId)
 
 	topic := &db.Topic{}

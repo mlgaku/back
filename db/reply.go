@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -17,9 +18,22 @@ type Reply struct {
 	Topic  bson.ObjectId `json:"topic,omitempty" validate:"required"`
 	Author bson.ObjectId `json:"author"`
 
-	User struct {
-		Name string `json:"name"`
-	} `json:"user,omitempty" bson:",omitempty"`
+	User ReplyUser `json:"user,omitempty" bson:",omitempty"`
+}
+
+type ReplyUser struct {
+	Name string `json:"name"`
+}
+
+// 获得 Reply 实例
+func NewReply(body []byte) (*Reply, error) {
+	reply := &Reply{}
+	if err := json.Unmarshal(body, reply); err != nil {
+		return nil, err
+	}
+
+	reply.Date, reply.Author, reply.User = time.Now(), "", ReplyUser{}
+	return reply, nil
 }
 
 // 添加
