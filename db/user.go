@@ -95,3 +95,16 @@ func (*User) NameExists(db *Database, name string) (bool, error) {
 
 	return false, nil
 }
+
+// 邮箱地址是否存在
+func (*User) EmailExists(db *Database, email string) (bool, error) {
+	if email == "" {
+		return false, errors.New("邮箱地址不能为空")
+	}
+
+	if c, _ := db.C("user").Find(bson.M{"email": email}).Count(); c > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}

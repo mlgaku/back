@@ -15,6 +15,10 @@ type User struct {
 func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
 	user, _ := db.NewUser(req.Body)
 
+	if _, ok := u.CheckEmail(bd, req).(*Succ); ok {
+		return &Fail{Msg: ""}
+	}
+
 	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
 	if err := u.Db.Add(bd, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
@@ -30,8 +34,9 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "密码不能为空"}
 	}
 
-	if _, ok := u.Check(bd, req).(*Succ); ok {
-		return &Fail{Msg: "用户名不存在"}
+	// 检查邮箱是否存在
+	if v, ok := u.Check(bd, req).(*Fail); ok {
+		return &Fail{Msg: v.Msg}
 	}
 
 	result, err := u.Db.FindByName(bd, user.Name)
@@ -64,6 +69,21 @@ func (u *User) Check(bd *Database, req *Request) Value {
 
 	if b {
 		return &Fail{Msg: "用户名已存在"}
+	}
+	return &Succ{}
+}
+
+// 检查邮箱地址是否已存在
+func (u *User) CheckEmail(bd *Database, req *Request) Value {
+	user, _ := db.NewUser(req.Body)
+
+	b, err := u.Db.EmailExists(bd, user.Email)
+	if err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	if b {
+		return &Fail{Msg: "邮箱地址已存在"}
 	}
 	return &Succ{}
 }
