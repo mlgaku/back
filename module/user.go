@@ -44,9 +44,7 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 	}
 
 	// 保存状态
-	ses.Set("user_id", result.Id)
-	ses.Set("user_name", result.Name)
-	ses.Set("user_email", result.Email)
+	ses.Set("user", result)
 
 	return &Succ{Data: &db.User{
 		Id:    result.Id,

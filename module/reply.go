@@ -17,8 +17,10 @@ type Reply struct {
 
 // 添加新回复
 func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
+	user := ses.Get("user").(db.User)
+
 	reply, _ := db.NewReply(req.Body)
-	reply.Author = ses.Get("user_id").(bson.ObjectId)
+	reply.Author = user.Id
 
 	topic := &db.Topic{}
 	if err := topic.Find(bd, reply.Topic, topic); err != nil {
@@ -31,7 +33,7 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value 
 	}
 
 	// 更新最后回复
-	topic.UpdateReply(bd, reply.Topic, ses.Get("user_name").(string))
+	topic.UpdateReply(bd, reply.Topic, user.Name)
 
 	// 回复人不是主题作者时添加通知
 	if reply.Author != topic.Author {
@@ -39,14 +41,14 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value 
 			Type:       1,
 			Date:       time.Now(),
 			Master:     topic.Author,
-			User:       ses.Get("user_name").(string),
+			User:       user.Name,
 			TopicID:    reply.Topic,
 			TopicTitle: topic.Title,
 		})
 	}
 
 	// 通知被at的人
-	r.handleAt(bd, ses, topic, reply)
+	r.handleAt(bd, user.Name, topic, reply)
 
 	ps.Publish(&Prot{Mod: "reply", Act: "list"})
 	ps.Publish(&Prot{Mod: "notice", Act: "list"})
@@ -72,7 +74,7 @@ func (r *Reply) List(db *Database, req *Request) Value {
 }
 
 // 处理 At
-func (*Reply) handleAt(bd *Database, ses *Session, topic *db.Topic, reply *db.Reply) {
+func (*Reply) handleAt(bd *Database, name string, topic *db.Topic, reply *db.Reply) {
 	match := regexp.MustCompile(`@[a-zA-Z0-9]+`).FindAllString(reply.Content, 5)
 	if match == nil {
 		return
@@ -87,7 +89,6 @@ func (*Reply) handleAt(bd *Database, ses *Session, topic *db.Topic, reply *db.Re
 		return
 	}
 
-	name := ses.Get("user_name").(string)
 	for k, v := range user {
 		// 跳过@自己
 		if k == name {
