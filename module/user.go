@@ -15,8 +15,9 @@ type User struct {
 func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
 	user, _ := db.NewUser(req.Body)
 
-	if _, ok := u.CheckEmail(bd, req).(*Succ); ok {
-		return &Fail{Msg: ""}
+	// 检查邮箱是否存在
+	if v, ok := u.CheckEmail(bd, req).(*Fail); ok {
+		return &Fail{Msg: v.Msg}
 	}
 
 	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
@@ -34,9 +35,8 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "密码不能为空"}
 	}
 
-	// 检查邮箱是否存在
-	if v, ok := u.Check(bd, req).(*Fail); ok {
-		return &Fail{Msg: v.Msg}
+	if _, ok := u.Check(bd, req).(*Succ); ok {
+		return &Fail{Msg: "用户名不存在"}
 	}
 
 	result, err := u.Db.FindByName(bd, user.Name)
@@ -48,9 +48,7 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "用户名与密码不匹配"}
 	}
 
-	// 保存状态
 	ses.Set("user", result)
-
 	return &Succ{Data: &db.User{
 		Id:    result.Id,
 		Name:  result.Name,
