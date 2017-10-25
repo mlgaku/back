@@ -38,7 +38,7 @@ func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 	}
 
 	m.Prot = prot
-	m.Prot.Act = strings.ToLower(m.Prot.Act)
+	m.Prot.Act = strings.ToLower(m.Prot.Act[:1]) + m.Prot.Act[1:]
 	return m.invoke()
 }
 
