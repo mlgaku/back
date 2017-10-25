@@ -15,11 +15,6 @@ type User struct {
 func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
 	user, _ := db.NewUser(req.Body)
 
-	// 检查邮箱是否存在
-	if v, ok := u.CheckEmail(bd, req).(*Fail); ok {
-		return &Fail{Msg: v.Msg}
-	}
-
 	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
 	if err := u.Db.Add(bd, conf, user); err != nil {
 		return &Fail{Msg: err.Error()}
@@ -65,10 +60,7 @@ func (u *User) Check(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if b {
-		return &Fail{Msg: "用户名已存在"}
-	}
-	return &Succ{}
+	return &Succ{Data: b}
 }
 
 // 检查邮箱地址是否已存在
@@ -80,8 +72,5 @@ func (u *User) CheckEmail(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if b {
-		return &Fail{Msg: "邮箱地址已存在"}
-	}
-	return &Succ{}
+	return &Succ{Data: b}
 }

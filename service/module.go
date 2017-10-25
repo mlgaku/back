@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mlgaku/back/types"
+	"log"
 	"path"
 	"reflect"
 	"strings"
@@ -56,6 +57,12 @@ func (m *Module) invoke() (types.Value, error) {
 	if err := m.middle(); err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+		}
+	}()
 
 	res := mth.Call(m.inject(&mth))
 	if len(res) > 0 {
