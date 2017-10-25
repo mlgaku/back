@@ -60,7 +60,7 @@ func (u *User) Check(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	return &Succ{Data: b}
+	return &Succ{Data: !b}
 }
 
 // 检查邮箱地址是否已存在
@@ -72,5 +72,5 @@ func (u *User) CheckEmail(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	return &Succ{Data: b}
+	return &Succ{Data: !b}
 }
