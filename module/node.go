@@ -70,14 +70,12 @@ func (n *Node) Remove(ps *Pubsub, bd *Database, req *Request) Value {
 	return &Succ{}
 }
 
-// 检查是否有相同节点存在
+// 检查节点名是否可用
 func (n *Node) Check(bd *Database, req *Request) Value {
 	node, _ := db.NewNode(req.Body)
 	if b, err := n.Db.NameExists(bd, node.Name); err != nil {
 		return &Fail{Msg: err.Error()}
-	} else if b {
-		return &Fail{Msg: "已有同名节点存在"}
+	} else {
+		return &Succ{Data: !b}
 	}
-
-	return &Succ{}
 }
