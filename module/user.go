@@ -30,7 +30,9 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "密码不能为空"}
 	}
 
-	if _, ok := u.Check(bd, req).(*Succ); ok {
+	if v, ok := u.Check(bd, req).(*Succ); !ok {
+		return &Fail{Msg: "检查用户名失败"}
+	} else if v.Data == true {
 		return &Fail{Msg: "用户名不存在"}
 	}
 
