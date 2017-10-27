@@ -18,26 +18,28 @@ type Module struct {
 
 // 加载模块
 func (m *Module) Load(msg []byte) (types.Value, error) {
-	p := &types.Prot{}
-	if json.Unmarshal(msg, p) != nil {
+	if json.Unmarshal(msg, m.Prot) != nil {
 		return nil, errors.New("json parsing failed")
 	}
 
-	return m.LoadProt(p)
+	return m.LoadProt(nil)
 }
 
 // 加载模块(Prot方式)
 func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
+	if prot != nil {
+		m.Prot = prot
+	}
+
 	switch {
-	case prot.Mod == "":
+	case m.Prot.Mod == "":
 		return nil, errors.New("mod get failed")
-	case prot.Act == "":
+	case m.Prot.Act == "":
 		return nil, errors.New("act get failed")
-	case !json.Valid([]byte(prot.Body)):
+	case !json.Valid([]byte(m.Prot.Body)):
 		return nil, errors.New("invalid body content")
 	}
 
-	m.Prot = prot
 	m.Prot.Act = strings.ToLower(m.Prot.Act[:1]) + m.Prot.Act[1:]
 	return m.invoke()
 }
@@ -134,6 +136,7 @@ func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 // 获得 Module 实例
 func NewModule(cli *Client) *Module {
 	return &Module{
-		cli: cli,
+		cli:  cli,
+		Prot: new(types.Prot),
 	}
 }
