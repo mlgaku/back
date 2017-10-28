@@ -38,13 +38,12 @@ func NewReply(body []byte) (*Reply, error) {
 
 // 添加
 func (*Reply) Add(db *Database, reply *Reply) error {
-	if err := com.NewVali().Struct(reply); err != "" {
-		return errors.New(err)
-	}
-
 	reply.Date = time.Now()
 	reply.Content = strings.Trim(reply.Content, " ")
 
+	if err := com.NewVali().Struct(reply); err != "" {
+		return errors.New(err)
+	}
 	return db.C("reply").Insert(reply)
 }
 
@@ -55,12 +54,12 @@ func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, e
 	}
 
 	line := []bson.M{
-		bson.M{"$match": bson.M{"topic": topic}},
-		bson.M{"$skip": page * 20},
-		bson.M{"$limit": 20},
-		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
-		bson.M{"$unwind": "$user"},
-		bson.M{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1}},
+		{"$match": bson.M{"topic": topic}},
+		{"$skip": page * 20},
+		{"$limit": 20},
+		{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		{"$unwind": "$user"},
+		{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1}},
 	}
 
 	reply := &[]Reply{}
