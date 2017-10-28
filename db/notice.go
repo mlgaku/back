@@ -34,6 +34,19 @@ func (*Notice) Add(db *Database, notice *Notice) error {
 	return db.C("notice").Insert(notice)
 }
 
+// 查找
+func (*Notice) Find(db *Database, id bson.ObjectId, notice *Notice) error {
+	if id == "" {
+		return errors.New("未指定通知ID")
+	}
+
+	if err := db.C("notice").FindId(id).One(notice); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // 通过所属者查找
 func (*Notice) FindByMaster(db *Database, master bson.ObjectId) (*[]Notice, error) {
 	if master == "" {

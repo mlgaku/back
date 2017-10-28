@@ -15,6 +15,11 @@ var Middleware = map[string][]interface{}{
 		ShouldLogin,
 	},
 
+	// 获取通知
+	"notice.list": {
+		ShouldLogin,
+	},
+
 	// 添加节点
 	"node.add": {
 		ShouldLogin,
