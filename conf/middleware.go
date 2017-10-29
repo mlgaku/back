@@ -5,29 +5,23 @@ import (
 )
 
 var Middleware = map[string][]interface{}{
-	// 发表主题
-	"topic.new": {
-		ShouldLogin,
-	},
+	// 用户
+	"user.info":           {ShouldLogin},
+	"user.avatar":         {ShouldLogin},
+	"user.setAvatar":      {ShouldLogin},
+	"user.removeAvatar":   {ShouldLogin},
+	"user.changePassword": {ShouldLogin},
 
-	// 回复主题
-	"reply.new": {
-		ShouldLogin,
-	},
+	// 主题
+	"topic.new": {ShouldLogin},
 
-	// 获取通知
-	"notice.list": {
-		ShouldLogin,
-	},
+	// 回复
+	"reply.new": {ShouldLogin},
 
-	// 添加节点
-	"node.add": {
-		ShouldLogin,
-		ShouldFounder,
-	},
-	// 移除节点
-	"node.remove": {
-		ShouldLogin,
-		ShouldFounder,
-	},
+	// 通知
+	"notice.list": {ShouldLogin},
+
+	// 节点
+	"node.add":    {ShouldLogin, ShouldFounder},
+	"node.remove": {ShouldLogin, ShouldFounder},
 }

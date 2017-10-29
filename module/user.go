@@ -5,6 +5,8 @@ import (
 	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
+	"github.com/qiniu/api.v7/auth/qbox"
+	"github.com/qiniu/api.v7/storage"
 )
 
 type User struct {
@@ -46,11 +48,24 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 	}
 
 	ses.Set("user", result)
-	return &Succ{Data: &db.User{
-		Id:    result.Id,
-		Name:  result.Name,
-		Email: result.Email,
-	}}
+	return &Succ{}
+}
+
+// 用户信息
+func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
+	user := ses.Get("user").(*db.User)
+
+	result := &db.User{}
+	if err := u.Db.Find(bd, user.Id, result); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	// 设置了头像
+	if result.Avatar != "" {
+		result.Avatar = com.AvatarURL(user.Name, conf.Store.Url)
+	}
+
+	return &Succ{Data: result}
 }
 
 // 检查用户名是否已被注册
@@ -75,4 +90,59 @@ func (u *User) CheckEmail(bd *Database, req *Request) Value {
 	}
 
 	return &Succ{Data: !b}
+}
+
+// 上传头像
+func (u *User) Avatar(ses *Session, conf *Config) Value {
+	file := com.AvatarFile(ses.Get("user").(*db.User).Name)
+
+	policy := storage.PutPolicy{
+		Expires:    120,
+		DetectMime: 1,
+		FsizeLimit: 1048576,
+		MimeLimit:  "image/*",
+		Scope:      conf.Store.Bucket + ":" + file,
+	}
+
+	mac := qbox.NewMac(conf.Store.Ak, conf.Store.Sk)
+	return &Succ{Data: map[string]string{
+		"file":  file,
+		"token": policy.UploadToken(mac),
+	}}
+}
+
+// 设置头像
+func (u *User) SetAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config) Value {
+	user := ses.Get("user").(*db.User)
+
+	if err := u.Db.ChangeAvatarById(bd, user.Id, true); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	ps.Publish(&Prot{Mod: "user", Act: "info"})
+	return &Succ{}
+}
+
+// 移除头像
+func (u *User) RemoveAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config) Value {
+	user := ses.Get("user").(*db.User)
+
+	// 删除头像文件
+	manager := storage.NewBucketManager(qbox.NewMac(conf.Store.Ak, conf.Store.Sk), nil)
+	if err := manager.Delete(conf.Store.Bucket, com.AvatarFile(user.Name)); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	// 改变头像状态
+	if err := u.Db.ChangeAvatarById(bd, user.Id, false); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	ps.Publish(&Prot{Mod: "user", Act: "info"})
+	return &Succ{}
+}
+
+// 更改密码
+func (u *User) ChangePassword(conf *Config) {
+
 }

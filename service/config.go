@@ -14,6 +14,12 @@ type Config struct {
 	App struct {
 		Debug bool
 	}
+	Store struct {
+		Ak     string
+		Sk     string
+		Url    string
+		Bucket string
+	}
 	Secret struct {
 		Salt string
 	}

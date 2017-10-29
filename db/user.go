@@ -13,6 +13,7 @@ type User struct {
 	Id       bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Name     string        `json:"name" validate:"required,min=4,max=15,alphanum"`
 	Email    string        `json:"email" validate:"required,min=8,max=30,email"`
+	Avatar   string        `json:"avatar,omitempty" bson:",omitempty"`
 	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
 	Identity uint64        `json:"identity,omitempty" bson:",omitempty"`
 
@@ -27,7 +28,7 @@ func NewUser(body []byte) (*User, error) {
 		return nil, err
 	}
 
-	user.Identity, user.RegIP, user.RegDate = 0, "", time.Now()
+	user.Avatar, user.Identity, user.RegIP, user.RegDate = "", 0, "", time.Now()
 	return user, nil
 }
 
@@ -107,4 +108,17 @@ func (*User) EmailExists(db *Database, email string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// 通过ID修改头像状态
+func (*User) ChangeAvatarById(db *Database, id bson.ObjectId, avatar bool) error {
+	if id == "" {
+		return errors.New("用户ID不能为空")
+	}
+
+	if avatar {
+		return db.C("user").UpdateId(id, bson.M{"$set": bson.M{"avatar": "t"}})
+	} else {
+		return db.C("user").UpdateId(id, bson.M{"$unset": bson.M{"avatar": 1}})
+	}
 }
