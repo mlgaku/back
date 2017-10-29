@@ -22,7 +22,8 @@ type Reply struct {
 }
 
 type ReplyUser struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Avatar bool   `json:"avatar,omitempty"`
 }
 
 // 获得 Reply 实例
@@ -59,7 +60,7 @@ func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, e
 		{"$limit": 20},
 		{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1}},
+		{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1}},
 	}
 
 	reply := &[]Reply{}

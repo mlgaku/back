@@ -28,7 +28,8 @@ type Topic struct {
 }
 
 type TopicUser struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Avatar bool   `json:"avatar,omitempty"`
 }
 
 // 获得 Topic 实例
@@ -85,16 +86,16 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 // 分页查询
 func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, error) {
 	line := []bson.M{
-		bson.M{"$skip": page * 20},
-		bson.M{"$limit": 20},
-		bson.M{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
-		bson.M{"$unwind": "$user"},
-		bson.M{"$project": bson.M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1}},
+		{"$skip": page * 20},
+		{"$limit": 20},
+		{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		{"$unwind": "$user"},
+		{"$project": bson.M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.avatar": 1}},
 	}
 
 	if node != "" {
 		line = append([]bson.M{
-			bson.M{"$match": bson.M{"node": node}},
+			{"$match": bson.M{"node": node}},
 		}, line[:]...)
 	}
 

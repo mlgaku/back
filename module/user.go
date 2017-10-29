@@ -60,11 +60,6 @@ func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	// 设置了头像
-	if result.Avatar != "" {
-		result.Avatar = com.AvatarURL(user.Name, conf.Store.Url)
-	}
-
 	return &Succ{Data: result}
 }
 
