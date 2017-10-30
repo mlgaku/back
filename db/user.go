@@ -2,7 +2,6 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
 	"gopkg.in/mgo.v2/bson"
@@ -56,8 +55,10 @@ func (*User) Save(db *Database, id bson.ObjectId, user *User) error {
 	if id == "" {
 		return errors.New("用户ID不能为空")
 	}
-	fmt.Println(com.FilterStruct(user))
-	return db.C("user").UpdateId(id, bson.M{"$set": com.FilterStruct(user)})
+
+	return db.C("user").UpdateId(id, bson.M{
+		"$set": com.Extract(user, "intro", "tagline", "website"),
+	})
 }
 
 // 通过用户名查找

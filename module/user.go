@@ -1,7 +1,6 @@
 package module
 
 import (
-	"fmt"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
@@ -139,9 +138,13 @@ func (u *User) RemoveAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config
 }
 
 // 编辑资料
-func (u *User) EditProfile(bd *Database, req *Request) {
+func (u *User) EditProfile(bd *Database, req *Request) Value {
 	user, _ := db.NewUser(req.Body, "u")
-	fmt.Println(u.Db.Save(bd, user.Id, user))
+	if err := u.Db.Save(bd, user.Id, user); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	return &Succ{}
 }
 
 // 更改密码

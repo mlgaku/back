@@ -7,6 +7,17 @@ import (
 	"strings"
 )
 
+// 提取结构中的值
+func Extract(v interface{}, name ...string) map[string]interface{} {
+	ele, result := reflect.ValueOf(v).Elem(), map[string]interface{}{}
+	for i, e := 0, len(name); i < e; i++ {
+		if f := ele.FieldByName(strings.Title(name[i])); f.IsValid() {
+			result[name[i]] = f.Interface()
+		}
+	}
+	return result
+}
+
 // 字符串值
 func StringValue(val *Value) string {
 	switch n := (*val).(type) {
