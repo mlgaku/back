@@ -24,12 +24,11 @@ func ParseJSON(data []byte, typ string, v interface{}) error {
 
 	ele, val := reflect.TypeOf(v).Elem(), reflect.ValueOf(v).Elem()
 
-	for i := 0; i < ele.NumField(); i++ {
+	for i, e := 0, ele.NumField(); i < e; i++ {
 		fill := ele.Field(i).Tag.Get("fill")
 		if strings.Contains(fill, ALLOW_BOTH) {
 			continue
 		}
-
 		if !strings.Contains(fill, typ) {
 			val.Field(i).Set(reflect.Zero(val.Field(i).Type()))
 		}

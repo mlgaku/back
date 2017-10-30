@@ -19,7 +19,7 @@ type Topic struct {
 
 	Node    bson.ObjectId `fill:"iu" json:"node" validate:"required"`
 	Title   string        `fill:"iu" json:"title" validate:"required,min=10,max=50"`
-	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,required,min=20,max=5000"`
+	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=20,max=5000"`
 
 	User TopicUser `json:"user,omitempty" bson:",omitempty"`
 }
@@ -32,7 +32,11 @@ type TopicUser struct {
 // 获得 Topic 实例
 func NewTopic(body []byte, typ string) (*Topic, error) {
 	topic := &Topic{}
-	return topic, com.ParseJSON(body, typ, topic)
+	if err := com.ParseJSON(body, typ, topic); err != nil {
+		panic(err)
+	}
+
+	return topic, nil
 }
 
 // 添加

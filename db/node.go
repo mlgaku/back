@@ -18,7 +18,11 @@ type Node struct {
 // 获得 Node 实例
 func NewNode(body []byte, typ string) (*Node, error) {
 	node := &Node{}
-	return node, com.ParseJSON(body, typ, node)
+	if err := com.ParseJSON(body, typ, node); err != nil {
+		panic(err)
+	}
+
+	return node, nil
 }
 
 // 添加

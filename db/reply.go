@@ -28,7 +28,11 @@ type ReplyUser struct {
 // 获得 Reply 实例
 func NewReply(body []byte, typ string) (*Reply, error) {
 	reply := &Reply{}
-	return reply, com.ParseJSON(body, typ, reply)
+	if err := com.ParseJSON(body, typ, reply); err != nil {
+		panic(err)
+	}
+
+	return reply, nil
 }
 
 // 添加

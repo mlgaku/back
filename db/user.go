@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
 	"gopkg.in/mgo.v2/bson"
@@ -9,10 +10,14 @@ import (
 )
 
 type User struct {
-	Id       bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
-	Name     string        `fill:"i" json:"name" validate:"required,min=4,max=15,alphanum"`
-	Email    string        `fill:"i" json:"email" validate:"required,min=8,max=30,email"`
-	Password string        `fill:"i" json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
+	Name     string `fill:"i" json:"name" validate:"required,min=4,max=15,alphanum"`
+	Email    string `fill:"i" json:"email" validate:"required,min=8,max=30,email"`
+	Password string `fill:"i" json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
+
+	Id      bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
+	Intro   string        `fill:"u" json:"intro,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=100"`
+	Tagline string        `fill:"u" json:"tagline,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30"`
+	Website string        `fill:"u" json:"website,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30,url"`
 
 	RegIP    string    `json:"reg_ip,omitempty" bson:"reg_ip"`
 	RegDate  time.Time `json:"reg_date,omitempty" bson:"reg_date"`
@@ -23,7 +28,11 @@ type User struct {
 // 获得 User 实例
 func NewUser(body []byte, typ string) (*User, error) {
 	user := &User{}
-	return user, com.ParseJSON(body, typ, user)
+	if err := com.ParseJSON(body, typ, user); err != nil {
+		panic(err)
+	}
+
+	return user, nil
 }
 
 // 添加
@@ -32,6 +41,7 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 		return errors.New(err)
 	}
 
+	user.RegDate = time.Now()
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
 	return db.C("user").Insert(user)
 }
@@ -39,6 +49,15 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 // 查找
 func (*User) Find(db *Database, id bson.ObjectId, user interface{}) error {
 	return db.C("user").FindId(id).One(user)
+}
+
+// 保存
+func (*User) Save(db *Database, id bson.ObjectId, user *User) error {
+	if id == "" {
+		return errors.New("用户ID不能为空")
+	}
+	fmt.Println(com.FilterStruct(user))
+	return db.C("user").UpdateId(id, bson.M{"$set": com.FilterStruct(user)})
 }
 
 // 通过用户名查找
