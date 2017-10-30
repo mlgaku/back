@@ -12,7 +12,7 @@ type Node struct {
 
 // 添加节点
 func (n *Node) Add(ps *Pubsub, bd *Database, req *Request) Value {
-	node, _ := db.NewNode(req.Body)
+	node, _ := db.NewNode(req.Body, "i")
 
 	// 检查父节点
 	if node.Parent != "" {
@@ -43,7 +43,7 @@ func (n *Node) List(db *Database) Value {
 
 // 获取节点信息
 func (n *Node) Info(bd *Database, req *Request) Value {
-	node, _ := db.NewNode(req.Body)
+	node, _ := db.NewNode(req.Body, "b")
 	if err := n.Db.FindByIdOrName(bd, node); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -53,7 +53,7 @@ func (n *Node) Info(bd *Database, req *Request) Value {
 
 // 删除节点
 func (n *Node) Remove(ps *Pubsub, bd *Database, req *Request) Value {
-	node, _ := db.NewNode(req.Body)
+	node, _ := db.NewNode(req.Body, "b")
 
 	// 检查子节点
 	if b, err := n.Db.HasChild(bd, node.Id); err != nil {
@@ -72,7 +72,7 @@ func (n *Node) Remove(ps *Pubsub, bd *Database, req *Request) Value {
 
 // 检查节点名是否可用
 func (n *Node) Check(bd *Database, req *Request) Value {
-	node, _ := db.NewNode(req.Body)
+	node, _ := db.NewNode(req.Body, "b")
 	if b, err := n.Db.NameExists(bd, node.Name); err != nil {
 		return &Fail{Msg: err.Error()}
 	} else {

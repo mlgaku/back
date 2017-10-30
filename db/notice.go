@@ -1,8 +1,8 @@
 package db
 
 import (
-	"encoding/json"
 	"errors"
+	"github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -24,9 +24,9 @@ type Notice struct {
 }
 
 // 获得 Notice 实例
-func NewNotice(body []byte) (*Notice, error) {
+func NewNotice(body []byte, typ string) (*Notice, error) {
 	notice := &Notice{}
-	return notice, json.Unmarshal(body, notice)
+	return notice, common.ParseJSON(body, typ, notice)
 }
 
 // 添加

@@ -15,7 +15,7 @@ type User struct {
 
 // 注册
 func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
-	user, _ := db.NewUser(req.Body)
+	user, _ := db.NewUser(req.Body, "i")
 
 	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
 	if err := u.Db.Add(bd, conf, user); err != nil {
@@ -27,7 +27,7 @@ func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
 
 // 登录
 func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Value {
-	user, _ := db.NewUser(req.Body)
+	user, _ := db.NewUser(req.Body, "b")
 	if user.Password == "" {
 		return &Fail{Msg: "密码不能为空"}
 	}
@@ -65,7 +65,7 @@ func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
 
 // 检查用户名是否已被注册
 func (u *User) Check(bd *Database, req *Request) Value {
-	user, _ := db.NewUser(req.Body)
+	user, _ := db.NewUser(req.Body, "b")
 
 	b, err := u.Db.NameExists(bd, user.Name)
 	if err != nil {
@@ -77,7 +77,7 @@ func (u *User) Check(bd *Database, req *Request) Value {
 
 // 检查邮箱地址是否已存在
 func (u *User) CheckEmail(bd *Database, req *Request) Value {
-	user, _ := db.NewUser(req.Body)
+	user, _ := db.NewUser(req.Body, "b")
 
 	b, err := u.Db.EmailExists(bd, user.Email)
 	if err != nil {

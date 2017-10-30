@@ -19,7 +19,7 @@ type Reply struct {
 func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
 	user := ses.Get("user").(*db.User)
 
-	reply, _ := db.NewReply(req.Body)
+	reply, _ := db.NewReply(req.Body, "i")
 	reply.Author = user.Id
 
 	topic := &db.Topic{}

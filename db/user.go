@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -10,26 +9,21 @@ import (
 )
 
 type User struct {
-	Id       bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Name     string        `json:"name" validate:"required,min=4,max=15,alphanum"`
-	Email    string        `json:"email" validate:"required,min=8,max=30,email"`
-	Avatar   bool          `json:"avatar,omitempty" bson:",omitempty"`
-	Password string        `json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
-	Identity uint64        `json:"identity,omitempty" bson:",omitempty"`
+	Id       bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
+	Name     string        `fill:"i" json:"name" validate:"required,min=4,max=15,alphanum"`
+	Email    string        `fill:"i" json:"email" validate:"required,min=8,max=30,email"`
+	Password string        `fill:"i" json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
 
-	RegIP   string    `json:"reg_ip,omitempty" bson:"reg_ip"`
-	RegDate time.Time `json:"reg_date,omitempty" bson:"reg_date"`
+	RegIP    string    `json:"reg_ip,omitempty" bson:"reg_ip"`
+	RegDate  time.Time `json:"reg_date,omitempty" bson:"reg_date"`
+	Avatar   bool      `json:"avatar,omitempty" bson:",omitempty"`
+	Identity uint64    `json:"identity,omitempty" bson:",omitempty"`
 }
 
 // 获得 User 实例
-func NewUser(body []byte) (*User, error) {
+func NewUser(body []byte, typ string) (*User, error) {
 	user := &User{}
-	if err := json.Unmarshal(body, user); err != nil {
-		return nil, err
-	}
-
-	user.Avatar, user.Identity, user.RegIP, user.RegDate = false, 0, "", time.Now()
-	return user, nil
+	return user, com.ParseJSON(body, typ, user)
 }
 
 // 添加

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
@@ -11,15 +10,15 @@ import (
 
 type Node struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Name   string        `json:"name" validate:"required,max=30,alphanum"`
-	Title  string        `json:"title" validate:"required,max=30"`
-	Parent bson.ObjectId `json:"parent,omitempty" bson:",omitempty"`
+	Name   string        `fill:"iu" json:"name" validate:"required,max=30,alphanum"`
+	Title  string        `fill:"iu" json:"title" validate:"required,max=30"`
+	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`
 }
 
 // 获得 Node 实例
-func NewNode(body []byte) (*Node, error) {
+func NewNode(body []byte, typ string) (*Node, error) {
 	node := &Node{}
-	return node, json.Unmarshal(body, node)
+	return node, com.ParseJSON(body, typ, node)
 }
 
 // 添加
