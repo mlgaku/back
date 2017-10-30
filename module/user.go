@@ -138,9 +138,9 @@ func (u *User) RemoveAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config
 }
 
 // 编辑资料
-func (u *User) EditProfile(bd *Database, req *Request) Value {
+func (u *User) EditProfile(bd *Database, ses *Session, req *Request) Value {
 	user, _ := db.NewUser(req.Body, "u")
-	if err := u.Db.Save(bd, user.Id, user); err != nil {
+	if err := u.Db.Save(bd, ses.Get("user").(*db.User).Id, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

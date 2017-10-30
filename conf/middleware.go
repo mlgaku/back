@@ -10,6 +10,7 @@ var Middleware = map[string][]interface{}{
 	"user.avatar":         {ShouldLogin},
 	"user.setAvatar":      {ShouldLogin},
 	"user.removeAvatar":   {ShouldLogin},
+	"user.editProfile":    {ShouldLogin},
 	"user.changePassword": {ShouldLogin},
 
 	// 主题

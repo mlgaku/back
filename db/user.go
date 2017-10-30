@@ -9,19 +9,19 @@ import (
 )
 
 type User struct {
+	Id       bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	RegIP    string        `json:"reg_ip,omitempty" bson:"reg_ip"`
+	RegDate  time.Time     `json:"reg_date,omitempty" bson:"reg_date"`
+	Avatar   bool          `json:"avatar,omitempty" bson:",omitempty"`
+	Identity uint64        `json:"identity,omitempty" bson:",omitempty"`
+
 	Name     string `fill:"i" json:"name" validate:"required,min=4,max=15,alphanum"`
 	Email    string `fill:"i" json:"email" validate:"required,min=8,max=30,email"`
 	Password string `fill:"i" json:"password,omitempty" validate:"required,min=8,max=20,alphanum"`
 
-	Id      bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
-	Intro   string        `fill:"u" json:"intro,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=100"`
-	Tagline string        `fill:"u" json:"tagline,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30"`
-	Website string        `fill:"u" json:"website,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30,url"`
-
-	RegIP    string    `json:"reg_ip,omitempty" bson:"reg_ip"`
-	RegDate  time.Time `json:"reg_date,omitempty" bson:"reg_date"`
-	Avatar   bool      `json:"avatar,omitempty" bson:",omitempty"`
-	Identity uint64    `json:"identity,omitempty" bson:",omitempty"`
+	Intro   string `fill:"u" json:"intro,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=100"`
+	Tagline string `fill:"u" json:"tagline,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30"`
+	Website string `fill:"u" json:"website,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30,url"`
 }
 
 // 获得 User 实例
