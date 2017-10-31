@@ -10,13 +10,13 @@ import (
 )
 
 type Topic struct {
-	Id        bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Date      time.Time     `json:"date"`
 	Author    bson.ObjectId `json:"author"`
 	Views     uint64        `json:"views"`
 	Replies   uint64        `json:"replies"`
 	LastReply string        `json:"last_reply,omitempty" bson:"last_reply,omitempty"`
 
+	Id      bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
 	Node    bson.ObjectId `fill:"iu" json:"node" validate:"required"`
 	Title   string        `fill:"iu" json:"title" validate:"required,min=10,max=50"`
 	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=20,max=5000"`
@@ -87,6 +87,20 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 	}
 
 	return nil
+}
+
+// 保存
+func (*Topic) Save(db *Database, id bson.ObjectId, topic *Topic) error {
+	if id == "" {
+		return errors.New("主题ID不能为空")
+	}
+
+	set, err := com.Extract(topic, "u")
+	if err != nil {
+		return err
+	}
+
+	return db.C("topic").UpdateId(id, bson.M{"$set": set})
 }
 
 // 分页查询

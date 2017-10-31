@@ -25,6 +25,17 @@ func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
 	return &Succ{Data: id}
 }
 
+// 编辑主题
+func (t *Topic) Edit(bd *Database, req *Request) Value {
+	topic, _ := db.NewTopic(req.Body, "u")
+
+	if err := t.Db.Save(bd, topic.Id, topic); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	return &Succ{}
+}
+
 // 主题列表
 func (t *Topic) List(bd *Database, req *Request) Value {
 	var s struct {

@@ -19,9 +19,14 @@ func Extract(v interface{}, str ...string) (map[string]interface{}, error) {
 
 		ele := reflect.TypeOf(v).Elem()
 		for i, e := 0, ele.NumField(); i < e; i++ {
-
 			f := ele.Field(i)
-			if str[0] == getFillType(f) {
+
+			// ID 不被更新
+			if f.Name == "Id" && str[0] == ALLOW_UPDATE {
+				continue
+			}
+
+			if strings.Contains(getFillType(f), str[0]) {
 				w := val.Field(i).Interface()
 
 				// 验证字段

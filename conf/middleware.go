@@ -14,7 +14,8 @@ var Middleware = map[string][]interface{}{
 	"user.changePassword": {ShouldLogin},
 
 	// 主题
-	"topic.new": {ShouldLogin},
+	"topic.new":  {ShouldLogin},
+	"topic.edit": {ShouldLogin, ShouldModerator},
 
 	// 回复
 	"reply.new": {ShouldLogin},
