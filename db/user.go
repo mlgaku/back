@@ -64,6 +64,11 @@ func (*User) Save(db *Database, id bson.ObjectId, user *User) error {
 	return db.C("user").UpdateId(id, bson.M{"$set": set})
 }
 
+// 更新
+func (*User) Update(db *Database, id bson.ObjectId, user bson.M) error {
+	return db.C("user").UpdateId(id, bson.M{"$set": user})
+}
+
 // 通过用户名查找
 func (*User) FindByName(db *Database, name string) (*User, error) {
 	if name == "" {

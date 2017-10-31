@@ -1,6 +1,7 @@
 package module
 
 import (
+	"encoding/json"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/db"
 	. "github.com/mlgaku/back/service"
@@ -154,6 +155,32 @@ func (u *User) EditProfile(ps *Pubsub, bd *Database, ses *Session, req *Request)
 }
 
 // 更改密码
-func (u *User) ChangePassword(conf *Config) {
+func (u *User) ChangePassword(bd *Database, ses *Session, req *Request, conf *Config) Value {
+	var j struct {
+		Password    string `json:"password"`
+		NewPassword string `json:"new_password"`
+	}
 
+	json.Unmarshal(req.Body, &j)
+	if j.Password == j.NewPassword {
+		return &Succ{}
+	}
+
+	if err := com.NewVali().Var(
+		j.NewPassword,
+		com.StructTag(&u.Db, "password", "validate"),
+	); err != "" {
+		return &Fail{Msg: err}
+	}
+
+	id := ses.Get("user").(*db.User).Id
+
+	user := &db.User{}
+	u.Db.Find(bd, id, user, bson.M{"password": 1})
+	if com.Sha1(j.Password, conf.Secret.Salt) != user.Password {
+		return &Fail{Msg: "原密码输入不正确"}
+	}
+
+	u.Db.Update(bd, id, bson.M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
+	return &Succ{}
 }

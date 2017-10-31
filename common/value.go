@@ -98,6 +98,12 @@ func FilterStruct(v interface{}) map[string]interface{} {
 	return result
 }
 
+// 获取结构标签
+func StructTag(v interface{}, field string, tag string) string {
+	f, _ := reflect.TypeOf(v).Elem().FieldByName(strings.Title(field))
+	return f.Tag.Get(tag)
+}
+
 // 获取填充类型
 func getFillType(s reflect.StructField) string {
 	return s.Tag.Get("fill")
