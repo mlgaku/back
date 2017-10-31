@@ -51,5 +51,6 @@ func (t *Topic) Info(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
+	t.Db.Inc(bd, topic.Id, "views")
 	return &Succ{Data: topic}
 }

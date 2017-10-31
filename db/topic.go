@@ -61,6 +61,14 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 	return topic.Id, nil
 }
 
+// 递增
+func (*Topic) Inc(db *Database, id bson.ObjectId, field string) error {
+	if id == "" {
+		return errors.New("未指定主题ID")
+	}
+	return db.C("topic").UpdateId(id, bson.M{"$inc": bson.M{field: 1}})
+}
+
 // 查找
 func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 	if id == "" {
