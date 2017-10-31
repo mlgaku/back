@@ -6,6 +6,7 @@ import (
 	. "github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type Topic struct {
@@ -26,13 +27,44 @@ func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
 }
 
 // 编辑主题
-func (t *Topic) Edit(bd *Database, req *Request) Value {
+func (t *Topic) Edit(ps *Pubsub, bd *Database, ses *Session, req *Request) Value {
 	topic, _ := db.NewTopic(req.Body, "u")
+
+	old := &db.Topic{}
+	if err := t.Db.Find(bd, topic.Id, old); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
 
 	if err := t.Db.Save(bd, topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
+	// 添加通知
+	typ := 0
+	if topic.Title == old.Title && topic.Content == old.Content {
+		if topic.Node != old.Node { // 移动
+			typ = 4
+		}
+	} else {
+		if topic.Node == old.Node { // 修改
+			typ = 3
+		} else { // 修改&移动
+			typ = 5
+		}
+	}
+
+	user := ses.Get("user").(*db.User)
+	if typ != 0 && old.Author != user.Id {
+		new(db.Notice).Add(bd, &db.Notice{
+			Type:       uint64(typ),
+			Date:       time.Now(),
+			Master:     old.Author,
+			User:       user.Name,
+			TopicTitle: old.Title,
+		})
+	}
+
+	ps.Publish(&Prot{Mod: "notice", Act: "list"})
 	return &Succ{}
 }
 
