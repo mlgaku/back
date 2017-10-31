@@ -56,9 +56,12 @@ func (*User) Save(db *Database, id bson.ObjectId, user *User) error {
 		return errors.New("用户ID不能为空")
 	}
 
-	return db.C("user").UpdateId(id, bson.M{
-		"$set": com.Extract(user, "intro", "tagline", "website"),
-	})
+	set, err := com.Extract(user, "u")
+	if err != nil {
+		return err
+	}
+
+	return db.C("user").UpdateId(id, bson.M{"$set": set})
 }
 
 // 通过用户名查找

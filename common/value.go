@@ -3,48 +3,70 @@ package common
 import (
 	"encoding/json"
 	. "github.com/mlgaku/back/types"
+	"qiniupkg.com/x/errors.v7"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
 // 提取结构中的值
-func Extract(v interface{}, name ...string) map[string]interface{} {
-	ele, result := reflect.ValueOf(v).Elem(), map[string]interface{}{}
-	for i, e := 0, len(name); i < e; i++ {
-		if f := ele.FieldByName(strings.Title(name[i])); f.IsValid() {
-			result[name[i]] = f.Interface()
+func Extract(v interface{}, str ...string) (map[string]interface{}, error) {
+	val, result := reflect.ValueOf(v).Elem(), map[string]interface{}{}
+
+	// 插入或更新模式
+	if len(str) == 1 && len(str[0]) == 1 &&
+		strings.Contains(ALLOW_INSERT+ALLOW_UPDATE, str[0]) {
+
+		ele := reflect.TypeOf(v).Elem()
+		for i, e := 0, ele.NumField(); i < e; i++ {
+
+			f := ele.Field(i)
+			if str[0] == getFillType(f) {
+				w := val.Field(i).Interface()
+
+				// 验证字段
+				if v, ok := f.Tag.Lookup("validate"); ok {
+					if err := NewVali().Var(w, v); err != "" {
+						return nil, errors.New(err)
+					}
+				}
+
+				result[getFieldName(f)] = w
+			}
+		}
+
+		return result, nil
+	}
+
+	for i, e := 0, len(str); i < e; i++ {
+		if f := val.FieldByName(strings.Title(str[i])); f.IsValid() {
+			result[str[i]] = f.Interface()
 		}
 	}
-	return result
+	return result, nil
 }
 
 // 字符串值
 func StringValue(val *Value) string {
 	switch n := (*val).(type) {
 
-	// 数字
-	case int:
-		return string(n)
+	case int: // 数字
+		return strconv.Itoa(n)
 
-	// 布尔值
-	case bool:
+	case bool: // 布尔值
 		if n {
 			return "true"
 		}
 		return "false"
 
-	// 字符串
-	case string:
+	case string: // 字符串
 		return n
 
-	// 成功
-	case *Succ:
+	case *Succ: // 成功
 		n.Status = true
 
-	// 失败
-	case *Fail:
+	case *Fail: // 失败
 		n.Status = false
-
 	}
 
 	// 其它值统一转为json
@@ -53,11 +75,6 @@ func StringValue(val *Value) string {
 	}
 
 	return "Conversion failed"
-}
-
-// 字节值
-func BytesValue(val *Value) []byte {
-	return []byte(StringValue(val))
 }
 
 // 过滤结构中的空值
@@ -76,18 +93,20 @@ func FilterStruct(v interface{}) map[string]interface{} {
 	return result
 }
 
+// 获取填充类型
+func getFillType(s reflect.StructField) string {
+	return s.Tag.Get("fill")
+}
+
 // 获取字段名
 func getFieldName(s reflect.StructField) string {
 	key, ok := s.Tag.Lookup("bson")
 	if ok {
 		key = key[0:strings.Index(key, ",")]
-		if key == "" {
-			key = strings.ToLower(s.Name)
-		}
 	}
 
 	if key == "" {
-		return s.Name
+		key = strings.ToLower(s.Name)
 	}
 
 	return key
