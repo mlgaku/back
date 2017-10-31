@@ -71,7 +71,10 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 		return errors.New("主题信息获取失败")
 	}
 
-	if err := new(User).Find(db, topic.Author, &topic.User); err != nil {
+	if err := new(User).Find(db, topic.Author, &topic.User, bson.M{
+		"name":   1,
+		"avatar": 1,
+	}); err != nil {
 		return errors.New("用户信息获取失败")
 	}
 

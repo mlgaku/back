@@ -46,8 +46,8 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 }
 
 // 查找
-func (*User) Find(db *Database, id bson.ObjectId, user interface{}) error {
-	return db.C("user").FindId(id).One(user)
+func (*User) Find(db *Database, id bson.ObjectId, user interface{}, field bson.M) error {
+	return db.C("user").FindId(id).Select(field).One(user)
 }
 
 // 保存

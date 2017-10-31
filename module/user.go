@@ -7,6 +7,7 @@ import (
 	. "github.com/mlgaku/back/types"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type User struct {
@@ -56,7 +57,10 @@ func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
 	user := ses.Get("user").(*db.User)
 
 	result := &db.User{}
-	if err := u.Db.Find(bd, user.Id, result); err != nil {
+	if err := u.Db.Find(bd, user.Id, result, bson.M{
+		"reg_ip":   0,
+		"password": 0,
+	}); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
