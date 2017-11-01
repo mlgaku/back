@@ -83,6 +83,13 @@ func (n *Node) Remove(ps *Pubsub, bd *Database, req *Request) Value {
 		return &Fail{Msg: "删除失败: 该节点下有子节点存在"}
 	}
 
+	// 检查节点下是否还有主题存在
+	if b, err := n.Db.HasTopic(bd, node.Id); err != nil {
+		return &Fail{Msg: err.Error()}
+	} else if b {
+		return &Fail{Msg: "删除失败: 该节点下还有主题存在"}
+	}
+
 	if err := n.Db.RemoveById(bd, node.Id); err != nil {
 		return &Fail{Msg: err.Error()}
 	}

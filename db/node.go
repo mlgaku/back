@@ -97,6 +97,17 @@ func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
 	return true, nil
 }
 
+// 节点下是否有主题存在
+func (*Node) HasTopic(db *Database, id bson.ObjectId) (bool, error) {
+	if c, err := db.C("topic").Find(bson.M{"node": id}).Count(); err != nil {
+		return false, err
+	} else if c < 1 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // 通过ID或名称查找
 func (*Node) FindByIdOrName(db *Database, node *Node) error {
 	var q *mgo.Query
