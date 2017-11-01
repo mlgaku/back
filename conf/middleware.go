@@ -25,5 +25,6 @@ var Middleware = map[string][]interface{}{
 
 	// 节点
 	"node.add":    {ShouldLogin, ShouldFounder},
+	"node.edit":   {ShouldLogin, ShouldFounder},
 	"node.remove": {ShouldLogin, ShouldFounder},
 }

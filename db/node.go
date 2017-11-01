@@ -9,10 +9,12 @@ import (
 )
 
 type Node struct {
-	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Name   string        `fill:"iu" json:"name" validate:"required,max=30,alphanum"`
-	Title  string        `fill:"iu" json:"title" validate:"required,max=30"`
-	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`
+	Id     bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
+	Name   string        `fill:"iu" json:"name" validate:"required,max=30,alphanum"`                            // 名字
+	Title  string        `fill:"iu" json:"title" validate:"required,max=30"`                                    // 标题
+	Sort   int64         `fill:"iu" json:"sort,omitempty" bson:",omitempty" validate:"omitempty,numeric"`       // 排序
+	Desc   string        `fill:"iu" json:"desc,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=300"` // 描述
+	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`                                  // 父节点 ID
 }
 
 // 获得 Node 实例
@@ -32,6 +34,20 @@ func (*Node) Add(db *Database, node *Node) error {
 	}
 
 	return db.C("node").Insert(node)
+}
+
+// 保存
+func (*Node) Save(db *Database, id bson.ObjectId, node *Node) error {
+	if id == "" {
+		return errors.New("节点ID不能为空")
+	}
+
+	set, err := com.Extract(node, "u")
+	if err != nil {
+		return err
+	}
+
+	return db.C("node").UpdateId(id, bson.M{"$set": set})
 }
 
 // 查找所有

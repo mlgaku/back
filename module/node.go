@@ -31,6 +31,27 @@ func (n *Node) Add(ps *Pubsub, bd *Database, req *Request) Value {
 	return &Succ{}
 }
 
+// 编辑节点
+func (n *Node) Edit(ps *Pubsub, bd *Database, req *Request) Value {
+	node, _ := db.NewNode(req.Body, "u")
+
+	// 检查父节点
+	if node.Parent != "" {
+		if b, err := n.Db.IdExists(bd, node.Parent); err != nil {
+			return &Fail{Msg: err.Error()}
+		} else if !b {
+			return &Fail{Msg: "父节点不存在"}
+		}
+	}
+
+	if err := n.Db.Save(bd, node.Id, node); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	ps.Publish(&Prot{Mod: "node", Act: "list"})
+	return &Succ{}
+}
+
 // 获取节点列表
 func (n *Node) List(db *Database) Value {
 	node, err := n.Db.FindAll(db)
