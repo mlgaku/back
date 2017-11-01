@@ -12,7 +12,7 @@ type Node struct {
 	Id     bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
 	Name   string        `fill:"iu" json:"name" validate:"required,max=30,alphanum"`                            // 名字
 	Title  string        `fill:"iu" json:"title" validate:"required,max=30"`                                    // 标题
-	Sort   int64         `fill:"iu" json:"sort,omitempty" bson:",omitempty" validate:"omitempty,numeric"`       // 排序
+	Sort   uint64        `fill:"iu" json:"sort,omitempty" bson:",omitempty"`                                    // 排序
 	Desc   string        `fill:"iu" json:"desc,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=300"` // 描述
 	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`                                  // 父节点 ID
 }

@@ -26,6 +26,11 @@ func Extract(v interface{}, str ...string) (map[string]interface{}, error) {
 				continue
 			}
 
+			// 跳过空 ObjectId
+			if f.Type.String() == "bson.ObjectId" && val.Field(i).String() == "" {
+				continue
+			}
+
 			if strings.Contains(getFillType(f), str[0]) {
 				w := val.Field(i).Interface()
 
