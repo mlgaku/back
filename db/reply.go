@@ -46,6 +46,12 @@ func (*Reply) Add(db *Database, reply *Reply) error {
 	return db.C("reply").Insert(reply)
 }
 
+// 通过作者查找
+func (*Reply) FindByAuthor(db *Database, author bson.ObjectId, field bson.M, page int) (*[]Reply, error) {
+	result := new([]Reply)
+	return result, db.C("reply").Find(bson.M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+}
+
 // 分页查询
 func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, error) {
 	if topic == "" {

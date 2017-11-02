@@ -70,13 +70,13 @@ func (*User) Update(db *Database, id bson.ObjectId, user bson.M) error {
 }
 
 // 通过用户名查找
-func (*User) FindByName(db *Database, name string) (*User, error) {
+func (*User) FindByName(db *Database, name string, field bson.M) (*User, error) {
 	if name == "" {
 		return nil, errors.New("用户名不能为空")
 	}
 
 	user := &User{}
-	if err := db.C("user").Find(bson.M{"name": name}).One(user); err != nil {
+	if err := db.C("user").Find(bson.M{"name": name}).Select(field).One(user); err != nil {
 		return nil, errors.New(err.Error())
 	}
 

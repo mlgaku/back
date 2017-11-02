@@ -25,7 +25,7 @@ type Topic struct {
 }
 
 type TopicUser struct {
-	Name   string `json:"name"`
+	Name   string `json:"name,omitempty"`
 	Avatar bool   `json:"avatar,omitempty"`
 }
 
@@ -87,6 +87,12 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 	}
 
 	return nil
+}
+
+// 通过作者查找
+func (*Topic) FindByAuthor(db *Database, author bson.ObjectId, field bson.M, page int) (*[]Topic, error) {
+	result := new([]Topic)
+	return result, db.C("topic").Find(bson.M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 保存

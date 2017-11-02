@@ -11,9 +11,18 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type User struct {
-	Db db.User
-}
+type (
+	User struct {
+		Db db.User
+	}
+
+	// 用户主页
+	userHome struct {
+		User  *db.User    `json:"user"`
+		Topic *[]db.Topic `json:"topic"`
+		Reply *[]db.Reply `json:"reply"`
+	}
+)
 
 // 注册
 func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
@@ -40,7 +49,7 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 		return &Fail{Msg: "用户名不存在"}
 	}
 
-	result, err := u.Db.FindByName(bd, user.Name)
+	result, err := u.Db.FindByName(bd, user.Name, nil)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -51,6 +60,30 @@ func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Val
 
 	ses.Set("user", result)
 	return &Succ{}
+}
+
+// 用户主页
+func (u *User) Home(bd *Database, req *Request) Value {
+	user, _ := db.NewUser(req.Body, "b")
+	home := &userHome{}
+
+	err := error(nil)
+	if home.User, err = u.Db.FindByName(bd, user.Name, bson.M{
+		"reg_ip":   0,
+		"password": 0,
+	}); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	if home.Topic, err = new(db.Topic).FindByAuthor(bd, user.Id, bson.M{"content": 0}, 0); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	if home.Reply, err = new(db.Reply).FindByAuthor(bd, user.Id, nil, 0); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	return &Succ{Data: home}
 }
 
 // 用户信息

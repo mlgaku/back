@@ -1,5 +1,7 @@
 package service
 
+import "log"
+
 var APP = &App{}
 
 type App struct {
@@ -11,4 +13,8 @@ type App struct {
 
 	Route      map[string]interface{}
 	Middleware map[string][]interface{}
+}
+
+func init() {
+	log.SetFlags(log.Ldate | log.Lshortfile)
 }
