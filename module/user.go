@@ -75,11 +75,11 @@ func (u *User) Home(bd *Database, req *Request) Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if home.Topic, err = new(db.Topic).FindByAuthor(bd, user.Id, bson.M{"content": 0}, 0); err != nil {
+	if home.Topic, err = new(db.Topic).FindByAuthor(bd, home.User.Id, bson.M{"content": 0}, 0); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if home.Reply, err = new(db.Reply).FindByAuthor(bd, user.Id, nil, 0); err != nil {
+	if home.Reply, err = new(db.Reply).FindByAuthor(bd, home.User.Id, nil, 0); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
