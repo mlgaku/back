@@ -4,6 +4,7 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -66,7 +67,7 @@ func (*Topic) Inc(db *Database, id bson.ObjectId, field string) error {
 	if id == "" {
 		return errors.New("未指定主题ID")
 	}
-	return db.C("topic").UpdateId(id, bson.M{"$inc": bson.M{field: 1}})
+	return db.C("topic").UpdateId(id, M{"$inc": M{field: 1}})
 }
 
 // 查找
@@ -79,7 +80,7 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 		return errors.New("主题信息获取失败")
 	}
 
-	if err := new(User).Find(db, topic.Author, &topic.User, bson.M{
+	if err := new(User).Find(db, topic.Author, &topic.User, M{
 		"name":   1,
 		"avatar": 1,
 	}); err != nil {
@@ -90,9 +91,9 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 }
 
 // 通过作者查找
-func (*Topic) FindByAuthor(db *Database, author bson.ObjectId, field bson.M, page int) (*[]Topic, error) {
+func (*Topic) FindByAuthor(db *Database, author bson.ObjectId, field M, page int) (*[]Topic, error) {
 	result := new([]Topic)
-	return result, db.C("topic").Find(bson.M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, db.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 保存
@@ -106,22 +107,22 @@ func (*Topic) Save(db *Database, id bson.ObjectId, topic *Topic) error {
 		return err
 	}
 
-	return db.C("topic").UpdateId(id, bson.M{"$set": set})
+	return db.C("topic").UpdateId(id, M{"$set": set})
 }
 
 // 分页查询
 func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, error) {
-	line := []bson.M{
+	line := []M{
 		{"$skip": page * 20},
 		{"$limit": 20},
-		{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": bson.M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.avatar": 1}},
+		{"$project": M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.avatar": 1}},
 	}
 
 	if node != "" {
-		line = append([]bson.M{
-			{"$match": bson.M{"node": node}},
+		line = append([]M{
+			{"$match": M{"node": node}},
 		}, line[:]...)
 	}
 
@@ -142,5 +143,5 @@ func (*Topic) UpdateReply(db *Database, id bson.ObjectId, name string) error {
 		return errors.New("最后回复人名字不能为空")
 	}
 
-	return db.C("topic").UpdateId(id, bson.M{"$inc": bson.M{"replies": 1}, "$set": bson.M{"last_reply": name}})
+	return db.C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
 }

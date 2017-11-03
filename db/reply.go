@@ -4,6 +4,7 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
@@ -47,9 +48,9 @@ func (*Reply) Add(db *Database, reply *Reply) error {
 }
 
 // 通过作者查找
-func (*Reply) FindByAuthor(db *Database, author bson.ObjectId, field bson.M, page int) (*[]Reply, error) {
+func (*Reply) FindByAuthor(db *Database, author bson.ObjectId, field M, page int) (*[]Reply, error) {
 	result := new([]Reply)
-	return result, db.C("reply").Find(bson.M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, db.C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 分页查询
@@ -58,13 +59,13 @@ func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, e
 		return nil, errors.New("主题ID不能为空")
 	}
 
-	line := []bson.M{
-		{"$match": bson.M{"topic": topic}},
+	line := []M{
+		{"$match": M{"topic": topic}},
 		{"$skip": page * 20},
 		{"$limit": 20},
-		{"$lookup": bson.M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
+		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": bson.M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1}},
+		{"$project": M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1}},
 	}
 
 	reply := &[]Reply{}

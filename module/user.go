@@ -8,7 +8,6 @@ import (
 	. "github.com/mlgaku/back/types"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type (
@@ -68,14 +67,14 @@ func (u *User) Home(bd *Database, req *Request) Value {
 	home := &userHome{}
 
 	err := error(nil)
-	if home.User, err = u.Db.FindByName(bd, user.Name, bson.M{
+	if home.User, err = u.Db.FindByName(bd, user.Name, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if home.Topic, err = new(db.Topic).FindByAuthor(bd, home.User.Id, bson.M{"content": 0}, 0); err != nil {
+	if home.Topic, err = new(db.Topic).FindByAuthor(bd, home.User.Id, M{"content": 0}, 0); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -91,7 +90,7 @@ func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
 	user := ses.Get("user").(*db.User)
 
 	result := &db.User{}
-	if err := u.Db.Find(bd, user.Id, result, bson.M{
+	if err := u.Db.Find(bd, user.Id, result, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
@@ -209,11 +208,11 @@ func (u *User) ChangePassword(bd *Database, ses *Session, req *Request, conf *Co
 	id := ses.Get("user").(*db.User).Id
 
 	user := &db.User{}
-	u.Db.Find(bd, id, user, bson.M{"password": 1})
+	u.Db.Find(bd, id, user, M{"password": 1})
 	if com.Sha1(j.Password, conf.Secret.Salt) != user.Password {
 		return &Fail{Msg: "原密码输入不正确"}
 	}
 
-	u.Db.Update(bd, id, bson.M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
+	u.Db.Update(bd, id, M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
 	return &Succ{}
 }

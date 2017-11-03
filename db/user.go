@@ -4,6 +4,7 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -46,7 +47,7 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 }
 
 // 查找
-func (*User) Find(db *Database, id bson.ObjectId, user interface{}, field bson.M) error {
+func (*User) Find(db *Database, id bson.ObjectId, user interface{}, field M) error {
 	return db.C("user").FindId(id).Select(field).One(user)
 }
 
@@ -61,22 +62,22 @@ func (*User) Save(db *Database, id bson.ObjectId, user *User) error {
 		return err
 	}
 
-	return db.C("user").UpdateId(id, bson.M{"$set": set})
+	return db.C("user").UpdateId(id, M{"$set": set})
 }
 
 // 更新
-func (*User) Update(db *Database, id bson.ObjectId, user bson.M) error {
-	return db.C("user").UpdateId(id, bson.M{"$set": user})
+func (*User) Update(db *Database, id bson.ObjectId, user M) error {
+	return db.C("user").UpdateId(id, M{"$set": user})
 }
 
 // 通过用户名查找
-func (*User) FindByName(db *Database, name string, field bson.M) (*User, error) {
+func (*User) FindByName(db *Database, name string, field M) (*User, error) {
 	if name == "" {
 		return nil, errors.New("用户名不能为空")
 	}
 
 	user := &User{}
-	if err := db.C("user").Find(bson.M{"name": name}).Select(field).One(user); err != nil {
+	if err := db.C("user").Find(M{"name": name}).Select(field).One(user); err != nil {
 		return nil, errors.New(err.Error())
 	}
 
@@ -98,7 +99,7 @@ func (*User) FindByNameMany(db *Database, name []string) (map[string]User, error
 	}
 
 	result := []User{}
-	db.C("user").Find(bson.M{"name": bson.M{"$in": in}}).All(&result)
+	db.C("user").Find(M{"name": M{"$in": in}}).All(&result)
 
 	for _, v := range result {
 		user[v.Name] = v
@@ -112,7 +113,7 @@ func (*User) NameExists(db *Database, name string) (bool, error) {
 		return false, errors.New("用户名不能为空")
 	}
 
-	if c, _ := db.C("user").Find(bson.M{"name": name}).Count(); c > 0 {
+	if c, _ := db.C("user").Find(M{"name": name}).Count(); c > 0 {
 		return true, nil
 	}
 
@@ -125,7 +126,7 @@ func (*User) EmailExists(db *Database, email string) (bool, error) {
 		return false, errors.New("邮箱地址不能为空")
 	}
 
-	if c, _ := db.C("user").Find(bson.M{"email": email}).Count(); c > 0 {
+	if c, _ := db.C("user").Find(M{"email": email}).Count(); c > 0 {
 		return true, nil
 	}
 
@@ -138,5 +139,5 @@ func (*User) ChangeAvatarById(db *Database, id bson.ObjectId, avatar bool) error
 		return errors.New("用户ID不能为空")
 	}
 
-	return db.C("user").UpdateId(id, bson.M{"$set": bson.M{"avatar": avatar}})
+	return db.C("user").UpdateId(id, M{"$set": M{"avatar": avatar}})
 }

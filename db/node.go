@@ -4,6 +4,7 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -47,13 +48,13 @@ func (*Node) Save(db *Database, id bson.ObjectId, node *Node) error {
 		return err
 	}
 
-	return db.C("node").UpdateId(id, bson.M{"$set": set})
+	return db.C("node").UpdateId(id, M{"$set": set})
 }
 
 // 查找所有
 func (*Node) FindAll(db *Database) (*[]Node, error) {
 	node := &[]Node{}
-	if err := db.C("node").Find(bson.M{}).All(node); err != nil {
+	if err := db.C("node").Find(M{}).All(node); err != nil {
 		return nil, err
 	}
 
@@ -77,7 +78,7 @@ func (*Node) NameExists(db *Database, name string) (bool, error) {
 		return false, errors.New("节点名不能为空")
 	}
 
-	if c, err := db.C("node").Find(bson.M{"name": name}).Count(); err != nil {
+	if c, err := db.C("node").Find(M{"name": name}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -88,7 +89,7 @@ func (*Node) NameExists(db *Database, name string) (bool, error) {
 
 // 是否有子节点存在
 func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
-	if c, err := db.C("node").Find(bson.M{"parent": id}).Count(); err != nil {
+	if c, err := db.C("node").Find(M{"parent": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -99,7 +100,7 @@ func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
 
 // 节点下是否有主题存在
 func (*Node) HasTopic(db *Database, id bson.ObjectId) (bool, error) {
-	if c, err := db.C("topic").Find(bson.M{"node": id}).Count(); err != nil {
+	if c, err := db.C("topic").Find(M{"node": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -114,7 +115,7 @@ func (*Node) FindByIdOrName(db *Database, node *Node) error {
 	if node.Id != "" {
 		q = db.C("node").FindId(node.Id)
 	} else if node.Name != "" {
-		q = db.C("node").Find(bson.M{"name": node.Name})
+		q = db.C("node").Find(M{"name": node.Name})
 	} else {
 		return errors.New("ID 或名称不能为空")
 	}

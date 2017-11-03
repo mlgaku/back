@@ -4,6 +4,7 @@ import (
 	"errors"
 	com "github.com/mlgaku/back/common"
 	. "github.com/mlgaku/back/service"
+	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -58,7 +59,7 @@ func (*Notice) FindByMaster(db *Database, master bson.ObjectId) (*[]Notice, erro
 	}
 
 	notices := &[]Notice{}
-	err := db.C("notice").Find(bson.M{"read": false, "master": master}).Select(bson.M{"read": 0, "master": 0}).All(notices)
+	err := db.C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
 	if err != nil {
 		return nil, err
 	}
@@ -72,5 +73,5 @@ func (*Notice) ChangeReadById(db *Database, id bson.ObjectId, read bool) error {
 		return errors.New("通知ID不能为空")
 	}
 
-	return db.C("notice").UpdateId(id, bson.M{"$set": bson.M{"read": read}})
+	return db.C("notice").UpdateId(id, M{"$set": M{"read": read}})
 }
