@@ -23,6 +23,11 @@ type Config struct {
 	Secret struct {
 		Salt string
 	}
+	Reward struct {
+		Sign     int64
+		NewTopic int64 `json:"new_topic"`
+		NewReply int64 `json:"new_reply"`
+	}
 }
 
 // 读配置

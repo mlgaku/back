@@ -13,6 +13,9 @@ var Middleware = map[string][]interface{}{
 	"user.editProfile":    {ShouldLogin},
 	"user.changePassword": {ShouldLogin},
 
+	// 账单
+	"bill.list": {ShouldLogin},
+
 	// 主题
 	"topic.new":  {ShouldLogin},
 	"topic.edit": {ShouldLogin, ShouldModerator},

@@ -14,13 +14,25 @@ type Topic struct {
 }
 
 // 发表新主题
-func (t *Topic) New(bd *Database, ses *Session, req *Request) Value {
+func (t *Topic) New(bd *Database, ses *Session, req *Request, conf *Config) Value {
 	topic, _ := db.NewTopic(req.Body, "i")
 	topic.Author = ses.Get("user").(*db.User).Id
 
 	id, err := t.Db.Add(bd, topic)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
+	}
+
+	// 更新余额
+	if conf.Reward.NewTopic != 0 {
+		new(db.User).Inc(bd, topic.Author, "balance", conf.Reward.NewTopic)
+		new(db.Bill).Add(bd, &db.Bill{
+			Msg:    topic.Title,
+			Type:   1,
+			Date:   time.Now(),
+			Number: conf.Reward.NewTopic,
+			Master: topic.Author,
+		})
 	}
 
 	return &Succ{Data: id}

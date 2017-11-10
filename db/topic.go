@@ -19,8 +19,8 @@ type Topic struct {
 
 	Id      bson.ObjectId `fill:"u" json:"id" bson:"_id,omitempty"`
 	Node    bson.ObjectId `fill:"iu" json:"node" validate:"required"`
-	Title   string        `fill:"iu" json:"title" validate:"required,min=10,max=50"`
-	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=20,max=5000"`
+	Title   string        `fill:"iu" json:"title" validate:"required,min=5,max=50"`
+	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=10,max=5000"`
 
 	User TopicUser `json:"user,omitempty" bson:",omitempty"`
 }

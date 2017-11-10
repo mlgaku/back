@@ -9,6 +9,7 @@ var Route = map[string]interface{}{
 
 	"site": &module.Site{},
 	"user": &module.User{},
+	"bill": &module.Bill{},
 	"node": &module.Node{},
 
 	"topic": &module.Topic{},

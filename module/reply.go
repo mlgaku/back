@@ -16,7 +16,7 @@ type Reply struct {
 }
 
 // 添加新回复
-func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value {
+func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request, conf *Config) Value {
 	user := ses.Get("user").(*db.User)
 
 	reply, _ := db.NewReply(req.Body, "i")
@@ -49,6 +49,18 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request) Value 
 
 	// 通知被at的人
 	r.handleAt(bd, user.Name, topic, reply)
+
+	// 更新余额
+	if conf.Reward.NewReply != 0 {
+		new(db.User).Inc(bd, reply.Author, "balance", conf.Reward.NewReply)
+		new(db.Bill).Add(bd, &db.Bill{
+			Msg:    topic.Title,
+			Type:   2,
+			Date:   time.Now(),
+			Number: conf.Reward.NewReply,
+			Master: reply.Author,
+		})
+	}
 
 	ps.Publish(&Prot{Mod: "reply", Act: "list"})
 	ps.Publish(&Prot{Mod: "notice", Act: "list"})

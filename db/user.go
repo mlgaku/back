@@ -14,6 +14,7 @@ type User struct {
 	RegIP    string        `json:"reg_ip,omitempty" bson:"reg_ip"`
 	RegDate  time.Time     `json:"reg_date,omitempty" bson:"reg_date"`
 	Avatar   bool          `json:"avatar,omitempty" bson:",omitempty"`
+	Balance  int64         `json:"balance"`
 	Identity uint64        `json:"identity,omitempty" bson:",omitempty"`
 
 	Name     string `fill:"i" json:"name" validate:"required,min=4,max=15,alphanum"`
@@ -44,6 +45,14 @@ func (*User) Add(db *Database, conf *Config, user *User) error {
 	user.RegDate = time.Now()
 	user.Password = com.Sha1(user.Password, conf.Secret.Salt)
 	return db.C("user").Insert(user)
+}
+
+// 递增
+func (*User) Inc(db *Database, id bson.ObjectId, field string, num int64) error {
+	if id == "" {
+		return errors.New("未指定用户ID")
+	}
+	return db.C("user").UpdateId(id, M{"$inc": M{field: num}})
 }
 
 // 查找
