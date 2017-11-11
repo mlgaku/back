@@ -12,7 +12,7 @@ import (
 )
 
 type Reply struct {
-	Db db.Reply
+	db db.Reply
 	service.Di
 }
 
@@ -29,7 +29,7 @@ func (r *Reply) New() Value {
 	}
 
 	// 添加回复
-	if err := r.Db.Add(reply); err != nil {
+	if err := r.db.Add(reply); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -79,7 +79,7 @@ func (r *Reply) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	reply, err := r.Db.Paginate(s.Topic, s.Page)
+	reply, err := r.db.Paginate(s.Topic, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}

@@ -7,13 +7,13 @@ import (
 )
 
 type Notice struct {
-	Db db.Notice
+	db db.Notice
 	service.Di
 }
 
 // 获取通知列表
 func (n *Notice) List() Value {
-	dat, err := n.Db.FindByMaster(n.Ses().Get("user").(*db.User).Id)
+	dat, err := n.db.FindByMaster(n.Ses().Get("user").(*db.User).Id)
 
 	if err != nil {
 		return &Fail{Msg: err.Error()}
@@ -25,7 +25,7 @@ func (n *Notice) List() Value {
 func (n *Notice) Remove() Value {
 	notice, _ := db.NewNotice(n.Req().Body, "b")
 
-	if err := n.Db.Find(notice.Id, notice); err != nil {
+	if err := n.db.Find(notice.Id, notice); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -33,7 +33,7 @@ func (n *Notice) Remove() Value {
 		return &Fail{Msg: "你不能移除别人的通知"}
 	}
 
-	if err := n.Db.ChangeReadById(notice.Id, true); err != nil {
+	if err := n.db.ChangeReadById(notice.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 

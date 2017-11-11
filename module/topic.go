@@ -10,7 +10,7 @@ import (
 )
 
 type Topic struct {
-	Db db.Topic
+	db db.Topic
 	service.Di
 }
 
@@ -19,7 +19,7 @@ func (t *Topic) New() Value {
 	topic, _ := db.NewTopic(t.Req().Body, "i")
 	topic.Author = t.Ses().Get("user").(*db.User).Id
 
-	id, err := t.Db.Add(topic)
+	id, err := t.db.Add(topic)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -45,11 +45,11 @@ func (t *Topic) Edit() Value {
 	topic, _ := db.NewTopic(t.Req().Body, "u")
 
 	old := &db.Topic{}
-	if err := t.Db.Find(topic.Id, old); err != nil {
+	if err := t.db.Find(topic.Id, old); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if err := t.Db.Save(topic.Id, topic); err != nil {
+	if err := t.db.Save(topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -92,7 +92,7 @@ func (t *Topic) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	topic, err := t.Db.Paginate(s.Node, s.Page)
+	topic, err := t.db.Paginate(s.Node, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -104,10 +104,10 @@ func (t *Topic) List() Value {
 func (t *Topic) Info() Value {
 	topic, _ := db.NewTopic(t.Req().Body, "b")
 
-	if err := t.Db.Find(topic.Id, topic); err != nil {
+	if err := t.db.Find(topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	t.Db.Inc(topic.Id, "views")
+	t.db.Inc(topic.Id, "views")
 	return &Succ{Data: topic}
 }

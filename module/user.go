@@ -12,7 +12,7 @@ import (
 
 type (
 	User struct {
-		Db db.User
+		db db.User
 		service.Di
 	}
 
@@ -29,7 +29,7 @@ func (u *User) Reg() Value {
 	user, _ := db.NewUser(u.Req().Body, "i")
 
 	user.RegIP, _ = com.IPAddr(u.Req().RemoteAddr())
-	if err := u.Db.Add(user, u.Conf().Secret.Salt); err != nil {
+	if err := u.db.Add(user, u.Conf().Secret.Salt); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -49,7 +49,7 @@ func (u *User) Login() Value {
 		return &Fail{Msg: "用户名不存在"}
 	}
 
-	result, err := u.Db.FindByName(user.Name, nil)
+	result, err := u.db.FindByName(user.Name, nil)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -68,7 +68,7 @@ func (u *User) Home() Value {
 	home := &userHome{}
 
 	err := error(nil)
-	if home.User, err = u.Db.FindByName(user.Name, M{
+	if home.User, err = u.db.FindByName(user.Name, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
@@ -91,7 +91,7 @@ func (u *User) Info() Value {
 	user := u.Ses().Get("user").(*db.User)
 
 	result := &db.User{}
-	if err := u.Db.Find(user.Id, result, M{
+	if err := u.db.Find(user.Id, result, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
@@ -105,7 +105,7 @@ func (u *User) Info() Value {
 func (u *User) Check() Value {
 	user, _ := db.NewUser(u.Req().Body, "b")
 
-	b, err := u.Db.NameExists(user.Name)
+	b, err := u.db.NameExists(user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -117,7 +117,7 @@ func (u *User) Check() Value {
 func (u *User) CheckEmail() Value {
 	user, _ := db.NewUser(u.Req().Body, "b")
 
-	b, err := u.Db.EmailExists(user.Email)
+	b, err := u.db.EmailExists(user.Email)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -148,7 +148,7 @@ func (u *User) Avatar() Value {
 func (u *User) SetAvatar() Value {
 	user := u.Ses().Get("user").(*db.User)
 
-	if err := u.Db.ChangeAvatarById(user.Id, true); err != nil {
+	if err := u.db.ChangeAvatarById(user.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -167,7 +167,7 @@ func (u *User) RemoveAvatar() Value {
 	}
 
 	// 改变头像状态
-	if err := u.Db.ChangeAvatarById(user.Id, false); err != nil {
+	if err := u.db.ChangeAvatarById(user.Id, false); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -179,7 +179,7 @@ func (u *User) RemoveAvatar() Value {
 func (u *User) EditProfile() Value {
 	user, _ := db.NewUser(u.Req().Body, "u")
 
-	if err := u.Db.Save(u.Ses().Get("user").(*db.User).Id, user); err != nil {
+	if err := u.db.Save(u.Ses().Get("user").(*db.User).Id, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -201,7 +201,7 @@ func (u *User) ChangePassword() Value {
 
 	if err := com.NewVali().Var(
 		j.NewPassword,
-		com.StructTag(&u.Db, "password", "validate"),
+		com.StructTag(&u.db, "password", "validate"),
 	); err != "" {
 		return &Fail{Msg: err}
 	}
@@ -209,11 +209,11 @@ func (u *User) ChangePassword() Value {
 	id, conf := u.Ses().Get("user").(*db.User).Id, u.Conf()
 
 	user := &db.User{}
-	u.Db.Find(id, user, M{"password": 1})
+	u.db.Find(id, user, M{"password": 1})
 	if com.Sha1(j.Password, conf.Secret.Salt) != user.Password {
 		return &Fail{Msg: "原密码输入不正确"}
 	}
 
-	u.Db.Update(id, M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
+	u.db.Update(id, M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
 	return &Succ{}
 }
