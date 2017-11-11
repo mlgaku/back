@@ -8,6 +8,7 @@ import (
 	"log"
 	"path"
 	"reflect"
+	"runtime/debug"
 	"strings"
 )
 
@@ -69,13 +70,12 @@ func (m *Module) invoke() (types.Value, error) {
 		}
 	}
 
-	if !APP.Conf.App.Debug {
-		defer func() {
-			if err := recover(); err != nil {
-				log.Println(err)
-			}
-		}()
-	}
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+			debug.PrintStack()
+		}
+	}()
 
 	// 调用方法
 	if res := mth.Call(nil); len(res) > 0 {
