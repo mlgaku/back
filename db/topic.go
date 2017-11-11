@@ -48,7 +48,7 @@ func (t *Topic) Add(topic *Topic) (bson.ObjectId, error) {
 		return "", errors.New(err)
 	}
 
-	if c, _ := t.Db().C("node").FindId(topic.Node).Count(); c != 1 {
+	if c, _ := t.C("node").FindId(topic.Node).Count(); c != 1 {
 		return "", errors.New("所属节点不存在")
 	}
 
@@ -57,7 +57,7 @@ func (t *Topic) Add(topic *Topic) (bson.ObjectId, error) {
 	topic.Title = strings.Trim(topic.Title, " ")
 	topic.Content = strings.Trim(topic.Content, " ")
 
-	if err := t.Db().C("topic").Insert(topic); err != nil {
+	if err := t.C("topic").Insert(topic); err != nil {
 		return "", err
 	}
 
@@ -69,7 +69,7 @@ func (t *Topic) Inc(id bson.ObjectId, field string) error {
 	if id == "" {
 		return errors.New("未指定主题ID")
 	}
-	return t.Db().C("topic").UpdateId(id, M{"$inc": M{field: 1}})
+	return t.C("topic").UpdateId(id, M{"$inc": M{field: 1}})
 }
 
 // 查找
@@ -78,7 +78,7 @@ func (t *Topic) Find(id bson.ObjectId, topic *Topic) error {
 		return errors.New("未指定主题ID")
 	}
 
-	if err := t.Db().C("topic").FindId(id).One(topic); err != nil {
+	if err := t.C("topic").FindId(id).One(topic); err != nil {
 		return errors.New("主题信息获取失败")
 	}
 
@@ -95,7 +95,7 @@ func (t *Topic) Find(id bson.ObjectId, topic *Topic) error {
 // 通过作者查找
 func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int) (*[]Topic, error) {
 	result := new([]Topic)
-	return result, t.Db().C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, t.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 保存
@@ -109,7 +109,7 @@ func (t *Topic) Save(id bson.ObjectId, topic *Topic) error {
 		return err
 	}
 
-	return t.Db().C("topic").UpdateId(id, M{"$set": set})
+	return t.C("topic").UpdateId(id, M{"$set": set})
 }
 
 // 分页查询
@@ -129,7 +129,7 @@ func (t *Topic) Paginate(node bson.ObjectId, page int) (*[]Topic, error) {
 	}
 
 	topic := &[]Topic{}
-	if err := t.Db().C("topic").Pipe(line).All(topic); err != nil {
+	if err := t.C("topic").Pipe(line).All(topic); err != nil {
 		return nil, err
 	}
 
@@ -145,5 +145,5 @@ func (t *Topic) UpdateReply(id bson.ObjectId, name string) error {
 		return errors.New("最后回复人名字不能为空")
 	}
 
-	return t.Db().C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
+	return t.C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
 }

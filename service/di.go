@@ -1,7 +1,16 @@
 package service
 
+import (
+	"gopkg.in/mgo.v2"
+)
+
 type Di struct {
 	Module *Module
+}
+
+// 数据集合
+func (*Di) C(n string) *mgo.Collection {
+	return APP.Db.C(n)
 }
 
 // 发布订阅

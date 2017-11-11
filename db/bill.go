@@ -32,7 +32,7 @@ func NewBill(body []byte, typ string) (*Bill, error) {
 
 // 添加
 func (b *Bill) Add(bill *Bill) error {
-	return b.Db().C("bill").Insert(bill)
+	return b.C("bill").Insert(bill)
 }
 
 // 通过所属者查找
@@ -42,7 +42,7 @@ func (b *Bill) FindByMaster(master bson.ObjectId) (*[]Bill, error) {
 	}
 
 	bill := &[]Bill{}
-	err := b.Db().C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(bill)
+	err := b.C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(bill)
 	if err != nil {
 		return nil, err
 	}

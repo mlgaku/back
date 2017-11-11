@@ -38,7 +38,7 @@ func NewNotice(body []byte, typ string) (*Notice, error) {
 
 // 添加
 func (n *Notice) Add(notice *Notice) error {
-	return n.Db().C("notice").Insert(notice)
+	return n.C("notice").Insert(notice)
 }
 
 // 查找
@@ -47,7 +47,7 @@ func (n *Notice) Find(id bson.ObjectId, notice *Notice) error {
 		return errors.New("未指定通知ID")
 	}
 
-	if err := n.Db().C("notice").FindId(id).One(notice); err != nil {
+	if err := n.C("notice").FindId(id).One(notice); err != nil {
 		return err
 	}
 
@@ -61,7 +61,7 @@ func (n *Notice) FindByMaster(master bson.ObjectId) (*[]Notice, error) {
 	}
 
 	notices := &[]Notice{}
-	err := n.Db().C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
+	err := n.C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
 	if err != nil {
 		return nil, err
 	}
@@ -75,5 +75,5 @@ func (n *Notice) ChangeReadById(id bson.ObjectId, read bool) error {
 		return errors.New("通知ID不能为空")
 	}
 
-	return n.Db().C("notice").UpdateId(id, M{"$set": M{"read": read}})
+	return n.C("notice").UpdateId(id, M{"$set": M{"read": read}})
 }

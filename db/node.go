@@ -36,7 +36,7 @@ func (n *Node) Add(node *Node) error {
 		return errors.New(err)
 	}
 
-	return n.Db().C("node").Insert(node)
+	return n.C("node").Insert(node)
 }
 
 // 保存
@@ -50,13 +50,13 @@ func (n *Node) Save(id bson.ObjectId, node *Node) error {
 		return err
 	}
 
-	return n.Db().C("node").UpdateId(id, M{"$set": set})
+	return n.C("node").UpdateId(id, M{"$set": set})
 }
 
 // 查找所有
 func (n *Node) FindAll() (*[]Node, error) {
 	node := &[]Node{}
-	if err := n.Db().C("node").Find(M{}).All(node); err != nil {
+	if err := n.C("node").Find(M{}).All(node); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (n *Node) FindAll() (*[]Node, error) {
 
 // 节点ID是否存在
 func (n *Node) IdExists(id bson.ObjectId) (bool, error) {
-	if c, err := n.Db().C("node").FindId(id).Count(); err != nil {
+	if c, err := n.C("node").FindId(id).Count(); err != nil {
 		return false, err
 	} else if c != 1 {
 		return false, nil
@@ -80,7 +80,7 @@ func (n *Node) NameExists(name string) (bool, error) {
 		return false, errors.New("节点名不能为空")
 	}
 
-	if c, err := n.Db().C("node").Find(M{"name": name}).Count(); err != nil {
+	if c, err := n.C("node").Find(M{"name": name}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -91,7 +91,7 @@ func (n *Node) NameExists(name string) (bool, error) {
 
 // 是否有子节点存在
 func (n *Node) HasChild(id bson.ObjectId) (bool, error) {
-	if c, err := n.Db().C("node").Find(M{"parent": id}).Count(); err != nil {
+	if c, err := n.C("node").Find(M{"parent": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -102,7 +102,7 @@ func (n *Node) HasChild(id bson.ObjectId) (bool, error) {
 
 // 节点下是否有主题存在
 func (n *Node) HasTopic(id bson.ObjectId) (bool, error) {
-	if c, err := n.Db().C("topic").Find(M{"node": id}).Count(); err != nil {
+	if c, err := n.C("topic").Find(M{"node": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -115,9 +115,9 @@ func (n *Node) HasTopic(id bson.ObjectId) (bool, error) {
 func (n *Node) FindByIdOrName(node *Node) error {
 	var q *mgo.Query
 	if node.Id != "" {
-		q = n.Db().C("node").FindId(node.Id)
+		q = n.C("node").FindId(node.Id)
 	} else if node.Name != "" {
-		q = n.Db().C("node").Find(M{"name": node.Name})
+		q = n.C("node").Find(M{"name": node.Name})
 	} else {
 		return errors.New("ID 或名称不能为空")
 	}
@@ -130,5 +130,5 @@ func (n *Node) RemoveById(id bson.ObjectId) error {
 		return errors.New("ID 不能为空")
 	}
 
-	return n.Db().C("node").RemoveId(id)
+	return n.C("node").RemoveId(id)
 }

@@ -46,13 +46,13 @@ func (r *Reply) Add(reply *Reply) error {
 	if err := com.NewVali().Struct(reply); err != "" {
 		return errors.New(err)
 	}
-	return r.Db().C("reply").Insert(reply)
+	return r.C("reply").Insert(reply)
 }
 
 // 通过作者查找
 func (r *Reply) FindByAuthor(author bson.ObjectId, field M, page int) (*[]Reply, error) {
 	result := new([]Reply)
-	return result, r.Db().C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, r.C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 分页查询
@@ -71,7 +71,7 @@ func (r *Reply) Paginate(topic bson.ObjectId, page int) (*[]Reply, error) {
 	}
 
 	reply := &[]Reply{}
-	if err := r.Db().C("reply").Pipe(line).All(reply); err != nil {
+	if err := r.C("reply").Pipe(line).All(reply); err != nil {
 		return nil, err
 	}
 
