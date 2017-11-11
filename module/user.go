@@ -12,8 +12,7 @@ import (
 
 type (
 	User struct {
-		db  db.User
-		com common
+		db db.User
 
 		service.Di
 	}
@@ -90,7 +89,7 @@ func (u *User) Home() Value {
 
 // 用户信息
 func (u *User) Info() Value {
-	user := u.com.user()
+	user := u.Ses().Get("user").(*db.User)
 
 	result := &db.User{}
 	if err := u.db.Find(user.Id, result, M{
@@ -129,7 +128,7 @@ func (u *User) CheckEmail() Value {
 
 // 上传头像
 func (u *User) Avatar() Value {
-	conf, file := u.Conf(), com.AvatarFile(u.com.user().Name)
+	conf, file := u.Conf(), com.AvatarFile(u.Ses().Get("user").(*db.User).Name)
 
 	policy := storage.PutPolicy{
 		Expires:    120,
@@ -148,7 +147,7 @@ func (u *User) Avatar() Value {
 
 // 设置头像
 func (u *User) SetAvatar() Value {
-	user := u.com.user()
+	user := u.Ses().Get("user").(*db.User)
 
 	if err := u.db.ChangeAvatarById(user.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
@@ -160,7 +159,7 @@ func (u *User) SetAvatar() Value {
 
 // 移除头像
 func (u *User) RemoveAvatar() Value {
-	conf, user := u.Conf(), u.com.user()
+	conf, user := u.Conf(), u.Ses().Get("user").(*db.User)
 
 	// 删除头像文件
 	manager := storage.NewBucketManager(qbox.NewMac(conf.Store.Ak, conf.Store.Sk), nil)
@@ -181,7 +180,7 @@ func (u *User) RemoveAvatar() Value {
 func (u *User) EditProfile() Value {
 	user, _ := db.NewUser(u.Req().Body, "u")
 
-	if err := u.db.Save(u.com.user().Id, user); err != nil {
+	if err := u.db.Save(u.Ses().Get("user").(*db.User).Id, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -208,7 +207,7 @@ func (u *User) ChangePassword() Value {
 		return &Fail{Msg: err}
 	}
 
-	id, conf := u.com.user().Id, u.Conf()
+	id, conf := u.Ses().Get("user").(*db.User).Id, u.Conf()
 
 	user := &db.User{}
 	u.db.Find(id, user, M{"password": 1})

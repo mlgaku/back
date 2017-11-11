@@ -69,11 +69,13 @@ func (m *Module) invoke() (types.Value, error) {
 		}
 	}
 
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-		}
-	}()
+	if !APP.Conf.App.Debug {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Println(err)
+			}
+		}()
+	}
 
 	// 调用方法
 	if res := mth.Call(nil); len(res) > 0 {

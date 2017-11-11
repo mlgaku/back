@@ -7,15 +7,14 @@ import (
 )
 
 type Notice struct {
-	db  db.Notice
-	com common
+	db db.Notice
 
 	service.Di
 }
 
 // 获取通知列表
 func (n *Notice) List() Value {
-	dat, err := n.db.FindByMaster(n.com.user().Id)
+	dat, err := n.db.FindByMaster(n.Ses().Get("user").(*db.User).Id)
 
 	if err != nil {
 		return &Fail{Msg: err.Error()}
@@ -31,7 +30,7 @@ func (n *Notice) Remove() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if notice.Master != n.com.user().Id {
+	if notice.Master != n.Ses().Get("user").(*db.User).Id {
 		return &Fail{Msg: "你不能移除别人的通知"}
 	}
 

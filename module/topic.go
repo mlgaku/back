@@ -10,8 +10,7 @@ import (
 )
 
 type Topic struct {
-	db  db.Topic
-	com common
+	db db.Topic
 
 	service.Di
 }
@@ -19,7 +18,7 @@ type Topic struct {
 // 发表新主题
 func (t *Topic) New() Value {
 	topic, _ := db.NewTopic(t.Req().Body, "i")
-	topic.Author = t.com.user().Id
+	topic.Author = t.Ses().Get("user").(*db.User).Id
 
 	id, err := t.db.Add(topic)
 	if err != nil {
@@ -69,7 +68,7 @@ func (t *Topic) Edit() Value {
 		}
 	}
 
-	user := t.com.user()
+	user := t.Ses().Get("user").(*db.User)
 	if typ != 0 && old.Author != user.Id {
 		new(db.Notice).Add(&db.Notice{
 			Type:       uint64(typ),
