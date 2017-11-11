@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -22,6 +22,8 @@ type Notice struct {
 	TopicTitle string        `json:"topic_title,omitempty" bson:"topic_title,omitempty"`       // (回复)主题标题
 	ReplyID    bson.ObjectId `json:"reply_id,omitempty" bson:"reply_id,omitempty"`             // (At)回复ID
 	ReplyPage  uint64        `json:"reply_page,omitempty" bson:"reply_page,minsize,omitempty"` // (At)回复页数
+
+	service.Di
 }
 
 // 获得 Notice 实例
@@ -35,17 +37,17 @@ func NewNotice(body []byte, typ string) (*Notice, error) {
 }
 
 // 添加
-func (*Notice) Add(db *Database, notice *Notice) error {
-	return db.C("notice").Insert(notice)
+func (n *Notice) Add(notice *Notice) error {
+	return n.Db().C("notice").Insert(notice)
 }
 
 // 查找
-func (*Notice) Find(db *Database, id bson.ObjectId, notice *Notice) error {
+func (n *Notice) Find(id bson.ObjectId, notice *Notice) error {
 	if id == "" {
 		return errors.New("未指定通知ID")
 	}
 
-	if err := db.C("notice").FindId(id).One(notice); err != nil {
+	if err := n.Db().C("notice").FindId(id).One(notice); err != nil {
 		return err
 	}
 
@@ -53,13 +55,13 @@ func (*Notice) Find(db *Database, id bson.ObjectId, notice *Notice) error {
 }
 
 // 通过所属者查找
-func (*Notice) FindByMaster(db *Database, master bson.ObjectId) (*[]Notice, error) {
+func (n *Notice) FindByMaster(master bson.ObjectId) (*[]Notice, error) {
 	if master == "" {
 		return nil, errors.New("所属者ID不能为空")
 	}
 
 	notices := &[]Notice{}
-	err := db.C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
+	err := n.Db().C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +70,10 @@ func (*Notice) FindByMaster(db *Database, master bson.ObjectId) (*[]Notice, erro
 }
 
 // 通过ID修改已读状态
-func (*Notice) ChangeReadById(db *Database, id bson.ObjectId, read bool) error {
+func (n *Notice) ChangeReadById(id bson.ObjectId, read bool) error {
 	if id == "" {
 		return errors.New("通知ID不能为空")
 	}
 
-	return db.C("notice").UpdateId(id, M{"$set": M{"read": read}})
+	return n.Db().C("notice").UpdateId(id, M{"$set": M{"read": read}})
 }

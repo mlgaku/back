@@ -40,6 +40,7 @@ func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 		return nil, errors.New("invalid body content")
 	}
 
+	// 方法名统一小写
 	m.Prot.Act = strings.ToLower(m.Prot.Act[:1]) + m.Prot.Act[1:]
 	return m.invoke()
 }
@@ -56,8 +57,16 @@ func (m *Module) invoke() (types.Value, error) {
 		return nil, fmt.Errorf("%s method does not exist", m.Prot.Act)
 	}
 
+	// 中间件
 	if err := m.middle(); err != nil {
 		return nil, err
+	}
+
+	// 填充当前 module 状态
+	if di := reflect.ValueOf(r).Elem().FieldByName("Di"); di.IsValid() {
+		if f := di.FieldByName("Module"); f.CanSet() {
+			f.Set(reflect.ValueOf(m))
+		}
 	}
 
 	defer func() {
@@ -66,8 +75,8 @@ func (m *Module) invoke() (types.Value, error) {
 		}
 	}()
 
-	res := mth.Call(m.inject(&mth))
-	if len(res) > 0 {
+	// 调用方法
+	if res := mth.Call(nil); len(res) > 0 {
 		return res[0].Interface(), nil
 	}
 
@@ -97,7 +106,7 @@ func (m *Module) middle() error {
 	return nil
 }
 
-// 依赖注入
+// 依赖注入(中间件)
 func (m *Module) inject(mth *reflect.Value) []reflect.Value {
 	num := (*mth).Type().NumIn()
 	if num < 1 {

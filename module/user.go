@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/db"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
@@ -13,6 +13,7 @@ import (
 type (
 	User struct {
 		Db db.User
+		service.Di
 	}
 
 	// 用户主页
@@ -24,11 +25,11 @@ type (
 )
 
 // 注册
-func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
-	user, _ := db.NewUser(req.Body, "i")
+func (u *User) Reg() Value {
+	user, _ := db.NewUser(u.Req().Body, "i")
 
-	user.RegIP, _ = com.IPAddr(req.RemoteAddr())
-	if err := u.Db.Add(bd, conf, user); err != nil {
+	user.RegIP, _ = com.IPAddr(u.Req().RemoteAddr())
+	if err := u.Db.Add(user, u.Conf().Secret.Salt); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -36,49 +37,49 @@ func (u *User) Reg(bd *Database, req *Request, conf *Config) Value {
 }
 
 // 登录
-func (u *User) Login(bd *Database, req *Request, ses *Session, conf *Config) Value {
-	user, _ := db.NewUser(req.Body, "b")
+func (u *User) Login() Value {
+	user, _ := db.NewUser(u.Req().Body, "b")
 	if user.Password == "" {
 		return &Fail{Msg: "密码不能为空"}
 	}
 
-	if v, ok := u.Check(bd, req).(*Succ); !ok {
+	if v, ok := u.Check().(*Succ); !ok {
 		return &Fail{Msg: "检查用户名失败"}
 	} else if v.Data == true {
 		return &Fail{Msg: "用户名不存在"}
 	}
 
-	result, err := u.Db.FindByName(bd, user.Name, nil)
+	result, err := u.Db.FindByName(user.Name, nil)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if result.Password != com.Sha1(user.Password, conf.Secret.Salt) {
+	if result.Password != com.Sha1(user.Password, u.Conf().Secret.Salt) {
 		return &Fail{Msg: "用户名与密码不匹配"}
 	}
 
-	ses.Set("user", result)
+	u.Ses().Set("user", result)
 	return &Succ{}
 }
 
 // 用户主页
-func (u *User) Home(bd *Database, req *Request) Value {
-	user, _ := db.NewUser(req.Body, "b")
+func (u *User) Home() Value {
+	user, _ := db.NewUser(u.Req().Body, "b")
 	home := &userHome{}
 
 	err := error(nil)
-	if home.User, err = u.Db.FindByName(bd, user.Name, M{
+	if home.User, err = u.Db.FindByName(user.Name, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if home.Topic, err = new(db.Topic).FindByAuthor(bd, home.User.Id, M{"content": 0}, 0); err != nil {
+	if home.Topic, err = new(db.Topic).FindByAuthor(home.User.Id, M{"content": 0}, 0); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if home.Reply, err = new(db.Reply).FindByAuthor(bd, home.User.Id, nil, 0); err != nil {
+	if home.Reply, err = new(db.Reply).FindByAuthor(home.User.Id, nil, 0); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -86,11 +87,11 @@ func (u *User) Home(bd *Database, req *Request) Value {
 }
 
 // 用户信息
-func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
-	user := ses.Get("user").(*db.User)
+func (u *User) Info() Value {
+	user := u.Ses().Get("user").(*db.User)
 
 	result := &db.User{}
-	if err := u.Db.Find(bd, user.Id, result, M{
+	if err := u.Db.Find(user.Id, result, M{
 		"reg_ip":   0,
 		"password": 0,
 	}); err != nil {
@@ -101,10 +102,10 @@ func (u *User) Info(bd *Database, ses *Session, conf *Config) Value {
 }
 
 // 检查用户名是否已被注册
-func (u *User) Check(bd *Database, req *Request) Value {
-	user, _ := db.NewUser(req.Body, "b")
+func (u *User) Check() Value {
+	user, _ := db.NewUser(u.Req().Body, "b")
 
-	b, err := u.Db.NameExists(bd, user.Name)
+	b, err := u.Db.NameExists(user.Name)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -113,10 +114,10 @@ func (u *User) Check(bd *Database, req *Request) Value {
 }
 
 // 检查邮箱地址是否已存在
-func (u *User) CheckEmail(bd *Database, req *Request) Value {
-	user, _ := db.NewUser(req.Body, "b")
+func (u *User) CheckEmail() Value {
+	user, _ := db.NewUser(u.Req().Body, "b")
 
-	b, err := u.Db.EmailExists(bd, user.Email)
+	b, err := u.Db.EmailExists(user.Email)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -125,8 +126,8 @@ func (u *User) CheckEmail(bd *Database, req *Request) Value {
 }
 
 // 上传头像
-func (u *User) Avatar(ses *Session, conf *Config) Value {
-	file := com.AvatarFile(ses.Get("user").(*db.User).Name)
+func (u *User) Avatar() Value {
+	conf, file := u.Conf(), com.AvatarFile(u.Ses().Get("user").(*db.User).Name)
 
 	policy := storage.PutPolicy{
 		Expires:    120,
@@ -144,20 +145,20 @@ func (u *User) Avatar(ses *Session, conf *Config) Value {
 }
 
 // 设置头像
-func (u *User) SetAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config) Value {
-	user := ses.Get("user").(*db.User)
+func (u *User) SetAvatar() Value {
+	user := u.Ses().Get("user").(*db.User)
 
-	if err := u.Db.ChangeAvatarById(bd, user.Id, true); err != nil {
+	if err := u.Db.ChangeAvatarById(user.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	ps.Publish(&Prot{Mod: "user", Act: "info"})
+	u.Ps().Publish(&Prot{Mod: "user", Act: "info"})
 	return &Succ{}
 }
 
 // 移除头像
-func (u *User) RemoveAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config) Value {
-	user := ses.Get("user").(*db.User)
+func (u *User) RemoveAvatar() Value {
+	conf, user := u.Conf(), u.Ses().Get("user").(*db.User)
 
 	// 删除头像文件
 	manager := storage.NewBucketManager(qbox.NewMac(conf.Store.Ak, conf.Store.Sk), nil)
@@ -166,34 +167,34 @@ func (u *User) RemoveAvatar(ps *Pubsub, bd *Database, ses *Session, conf *Config
 	}
 
 	// 改变头像状态
-	if err := u.Db.ChangeAvatarById(bd, user.Id, false); err != nil {
+	if err := u.Db.ChangeAvatarById(user.Id, false); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	ps.Publish(&Prot{Mod: "user", Act: "info"})
+	u.Ps().Publish(&Prot{Mod: "user", Act: "info"})
 	return &Succ{}
 }
 
 // 编辑资料
-func (u *User) EditProfile(ps *Pubsub, bd *Database, ses *Session, req *Request) Value {
-	user, _ := db.NewUser(req.Body, "u")
+func (u *User) EditProfile() Value {
+	user, _ := db.NewUser(u.Req().Body, "u")
 
-	if err := u.Db.Save(bd, ses.Get("user").(*db.User).Id, user); err != nil {
+	if err := u.Db.Save(u.Ses().Get("user").(*db.User).Id, user); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	ps.Publish(&Prot{Mod: "user", Act: "info"})
+	u.Ps().Publish(&Prot{Mod: "user", Act: "info"})
 	return &Succ{}
 }
 
 // 更改密码
-func (u *User) ChangePassword(bd *Database, ses *Session, req *Request, conf *Config) Value {
+func (u *User) ChangePassword() Value {
 	var j struct {
 		Password    string `json:"password"`
 		NewPassword string `json:"new_password"`
 	}
 
-	json.Unmarshal(req.Body, &j)
+	json.Unmarshal(u.Req().Body, &j)
 	if j.Password == j.NewPassword {
 		return &Succ{}
 	}
@@ -205,14 +206,14 @@ func (u *User) ChangePassword(bd *Database, ses *Session, req *Request, conf *Co
 		return &Fail{Msg: err}
 	}
 
-	id := ses.Get("user").(*db.User).Id
+	id, conf := u.Ses().Get("user").(*db.User).Id, u.Conf()
 
 	user := &db.User{}
-	u.Db.Find(bd, id, user, M{"password": 1})
+	u.Db.Find(id, user, M{"password": 1})
 	if com.Sha1(j.Password, conf.Secret.Salt) != user.Password {
 		return &Fail{Msg: "原密码输入不正确"}
 	}
 
-	u.Db.Update(bd, id, M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
+	u.Db.Update(id, M{"password": com.Sha1(j.NewPassword, conf.Secret.Salt)})
 	return &Succ{}
 }

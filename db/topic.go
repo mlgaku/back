@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -23,6 +23,8 @@ type Topic struct {
 	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=10,max=5000"`
 
 	User TopicUser `json:"user,omitempty" bson:",omitempty"`
+
+	service.Di
 }
 
 type TopicUser struct {
@@ -41,12 +43,12 @@ func NewTopic(body []byte, typ string) (*Topic, error) {
 }
 
 // 添加
-func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
+func (t *Topic) Add(topic *Topic) (bson.ObjectId, error) {
 	if err := com.NewVali().Struct(topic); err != "" {
 		return "", errors.New(err)
 	}
 
-	if c, _ := db.C("node").FindId(topic.Node).Count(); c != 1 {
+	if c, _ := t.Db().C("node").FindId(topic.Node).Count(); c != 1 {
 		return "", errors.New("所属节点不存在")
 	}
 
@@ -55,7 +57,7 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 	topic.Title = strings.Trim(topic.Title, " ")
 	topic.Content = strings.Trim(topic.Content, " ")
 
-	if err := db.C("topic").Insert(topic); err != nil {
+	if err := t.Db().C("topic").Insert(topic); err != nil {
 		return "", err
 	}
 
@@ -63,24 +65,24 @@ func (*Topic) Add(db *Database, topic *Topic) (bson.ObjectId, error) {
 }
 
 // 递增
-func (*Topic) Inc(db *Database, id bson.ObjectId, field string) error {
+func (t *Topic) Inc(id bson.ObjectId, field string) error {
 	if id == "" {
 		return errors.New("未指定主题ID")
 	}
-	return db.C("topic").UpdateId(id, M{"$inc": M{field: 1}})
+	return t.Db().C("topic").UpdateId(id, M{"$inc": M{field: 1}})
 }
 
 // 查找
-func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
+func (t *Topic) Find(id bson.ObjectId, topic *Topic) error {
 	if id == "" {
 		return errors.New("未指定主题ID")
 	}
 
-	if err := db.C("topic").FindId(id).One(topic); err != nil {
+	if err := t.Db().C("topic").FindId(id).One(topic); err != nil {
 		return errors.New("主题信息获取失败")
 	}
 
-	if err := new(User).Find(db, topic.Author, &topic.User, M{
+	if err := new(User).Find(topic.Author, &topic.User, M{
 		"name":   1,
 		"avatar": 1,
 	}); err != nil {
@@ -91,13 +93,13 @@ func (*Topic) Find(db *Database, id bson.ObjectId, topic *Topic) error {
 }
 
 // 通过作者查找
-func (*Topic) FindByAuthor(db *Database, author bson.ObjectId, field M, page int) (*[]Topic, error) {
+func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int) (*[]Topic, error) {
 	result := new([]Topic)
-	return result, db.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, t.Db().C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 保存
-func (*Topic) Save(db *Database, id bson.ObjectId, topic *Topic) error {
+func (t *Topic) Save(id bson.ObjectId, topic *Topic) error {
 	if id == "" {
 		return errors.New("主题ID不能为空")
 	}
@@ -107,11 +109,11 @@ func (*Topic) Save(db *Database, id bson.ObjectId, topic *Topic) error {
 		return err
 	}
 
-	return db.C("topic").UpdateId(id, M{"$set": set})
+	return t.Db().C("topic").UpdateId(id, M{"$set": set})
 }
 
 // 分页查询
-func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, error) {
+func (t *Topic) Paginate(node bson.ObjectId, page int) (*[]Topic, error) {
 	line := []M{
 		{"$skip": page * 20},
 		{"$limit": 20},
@@ -127,7 +129,7 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 	}
 
 	topic := &[]Topic{}
-	if err := db.C("topic").Pipe(line).All(topic); err != nil {
+	if err := t.Db().C("topic").Pipe(line).All(topic); err != nil {
 		return nil, err
 	}
 
@@ -135,7 +137,7 @@ func (*Topic) Paginate(db *Database, node bson.ObjectId, page int) (*[]Topic, er
 }
 
 // 更新回复
-func (*Topic) UpdateReply(db *Database, id bson.ObjectId, name string) error {
+func (t *Topic) UpdateReply(id bson.ObjectId, name string) error {
 	switch {
 	case id == "":
 		return errors.New("主题ID不能为空")
@@ -143,5 +145,5 @@ func (*Topic) UpdateReply(db *Database, id bson.ObjectId, name string) error {
 		return errors.New("最后回复人名字不能为空")
 	}
 
-	return db.C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
+	return t.Db().C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
 }

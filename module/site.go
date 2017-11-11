@@ -2,23 +2,17 @@ package module
 
 import (
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 )
 
-type (
-	Site struct{}
-
-	siteState struct {
-		AvatarURL string `json:"avatar_url"`
-	}
-)
+type Site struct {
+	service.Di
+}
 
 // 站点状态
-func (*Site) State(conf *Config) Value {
-	state := &siteState{
-		AvatarURL: com.AvatarURL("{name}", conf.Store.Url),
-	}
-
-	return &Succ{Data: state}
+func (s *Site) State() Value {
+	return &Succ{Data: map[string]string{
+		"avatar_url": com.AvatarURL("{name}", s.Conf().Store.Url),
+	}}
 }

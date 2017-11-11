@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -16,6 +16,8 @@ type Node struct {
 	Sort   uint64        `fill:"iu" json:"sort,omitempty" bson:",omitempty"`                                    // 排序
 	Desc   string        `fill:"iu" json:"desc,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=300"` // 描述
 	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`                                  // 父节点 ID
+
+	service.Di
 }
 
 // 获得 Node 实例
@@ -29,16 +31,16 @@ func NewNode(body []byte, typ string) (*Node, error) {
 }
 
 // 添加
-func (*Node) Add(db *Database, node *Node) error {
+func (n *Node) Add(node *Node) error {
 	if err := com.NewVali().Struct(node); err != "" {
 		return errors.New(err)
 	}
 
-	return db.C("node").Insert(node)
+	return n.Db().C("node").Insert(node)
 }
 
 // 保存
-func (*Node) Save(db *Database, id bson.ObjectId, node *Node) error {
+func (n *Node) Save(id bson.ObjectId, node *Node) error {
 	if id == "" {
 		return errors.New("节点ID不能为空")
 	}
@@ -48,13 +50,13 @@ func (*Node) Save(db *Database, id bson.ObjectId, node *Node) error {
 		return err
 	}
 
-	return db.C("node").UpdateId(id, M{"$set": set})
+	return n.Db().C("node").UpdateId(id, M{"$set": set})
 }
 
 // 查找所有
-func (*Node) FindAll(db *Database) (*[]Node, error) {
+func (n *Node) FindAll() (*[]Node, error) {
 	node := &[]Node{}
-	if err := db.C("node").Find(M{}).All(node); err != nil {
+	if err := n.Db().C("node").Find(M{}).All(node); err != nil {
 		return nil, err
 	}
 
@@ -62,8 +64,8 @@ func (*Node) FindAll(db *Database) (*[]Node, error) {
 }
 
 // 节点ID是否存在
-func (*Node) IdExists(db *Database, id bson.ObjectId) (bool, error) {
-	if c, err := db.C("node").FindId(id).Count(); err != nil {
+func (n *Node) IdExists(id bson.ObjectId) (bool, error) {
+	if c, err := n.Db().C("node").FindId(id).Count(); err != nil {
 		return false, err
 	} else if c != 1 {
 		return false, nil
@@ -73,12 +75,12 @@ func (*Node) IdExists(db *Database, id bson.ObjectId) (bool, error) {
 }
 
 // 节点名是否存在
-func (*Node) NameExists(db *Database, name string) (bool, error) {
+func (n *Node) NameExists(name string) (bool, error) {
 	if name == "" {
 		return false, errors.New("节点名不能为空")
 	}
 
-	if c, err := db.C("node").Find(M{"name": name}).Count(); err != nil {
+	if c, err := n.Db().C("node").Find(M{"name": name}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -88,8 +90,8 @@ func (*Node) NameExists(db *Database, name string) (bool, error) {
 }
 
 // 是否有子节点存在
-func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
-	if c, err := db.C("node").Find(M{"parent": id}).Count(); err != nil {
+func (n *Node) HasChild(id bson.ObjectId) (bool, error) {
+	if c, err := n.Db().C("node").Find(M{"parent": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -99,8 +101,8 @@ func (*Node) HasChild(db *Database, id bson.ObjectId) (bool, error) {
 }
 
 // 节点下是否有主题存在
-func (*Node) HasTopic(db *Database, id bson.ObjectId) (bool, error) {
-	if c, err := db.C("topic").Find(M{"node": id}).Count(); err != nil {
+func (n *Node) HasTopic(id bson.ObjectId) (bool, error) {
+	if c, err := n.Db().C("topic").Find(M{"node": id}).Count(); err != nil {
 		return false, err
 	} else if c < 1 {
 		return false, nil
@@ -110,12 +112,12 @@ func (*Node) HasTopic(db *Database, id bson.ObjectId) (bool, error) {
 }
 
 // 通过ID或名称查找
-func (*Node) FindByIdOrName(db *Database, node *Node) error {
+func (n *Node) FindByIdOrName(node *Node) error {
 	var q *mgo.Query
 	if node.Id != "" {
-		q = db.C("node").FindId(node.Id)
+		q = n.Db().C("node").FindId(node.Id)
 	} else if node.Name != "" {
-		q = db.C("node").Find(M{"name": node.Name})
+		q = n.Db().C("node").Find(M{"name": node.Name})
 	} else {
 		return errors.New("ID 或名称不能为空")
 	}
@@ -123,10 +125,10 @@ func (*Node) FindByIdOrName(db *Database, node *Node) error {
 	return q.One(node)
 }
 
-func (*Node) RemoveById(db *Database, id bson.ObjectId) error {
+func (n *Node) RemoveById(id bson.ObjectId) error {
 	if id == "" {
 		return errors.New("ID 不能为空")
 	}
 
-	return db.C("node").RemoveId(id)
+	return n.Db().C("node").RemoveId(id)
 }

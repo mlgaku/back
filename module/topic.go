@@ -3,7 +3,7 @@ package module
 import (
 	"encoding/json"
 	"github.com/mlgaku/back/db"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -11,22 +11,24 @@ import (
 
 type Topic struct {
 	Db db.Topic
+	service.Di
 }
 
 // 发表新主题
-func (t *Topic) New(bd *Database, ses *Session, req *Request, conf *Config) Value {
-	topic, _ := db.NewTopic(req.Body, "i")
-	topic.Author = ses.Get("user").(*db.User).Id
+func (t *Topic) New() Value {
+	topic, _ := db.NewTopic(t.Req().Body, "i")
+	topic.Author = t.Ses().Get("user").(*db.User).Id
 
-	id, err := t.Db.Add(bd, topic)
+	id, err := t.Db.Add(topic)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
 	// 更新余额
+	conf := t.Conf()
 	if conf.Reward.NewTopic != 0 {
-		new(db.User).Inc(bd, topic.Author, "balance", conf.Reward.NewTopic)
-		new(db.Bill).Add(bd, &db.Bill{
+		new(db.User).Inc(topic.Author, "balance", conf.Reward.NewTopic)
+		new(db.Bill).Add(&db.Bill{
 			Msg:    topic.Title,
 			Type:   1,
 			Date:   time.Now(),
@@ -39,15 +41,15 @@ func (t *Topic) New(bd *Database, ses *Session, req *Request, conf *Config) Valu
 }
 
 // 编辑主题
-func (t *Topic) Edit(ps *Pubsub, bd *Database, ses *Session, req *Request) Value {
-	topic, _ := db.NewTopic(req.Body, "u")
+func (t *Topic) Edit() Value {
+	topic, _ := db.NewTopic(t.Req().Body, "u")
 
 	old := &db.Topic{}
-	if err := t.Db.Find(bd, topic.Id, old); err != nil {
+	if err := t.Db.Find(topic.Id, old); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if err := t.Db.Save(bd, topic.Id, topic); err != nil {
+	if err := t.Db.Save(topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
@@ -65,9 +67,9 @@ func (t *Topic) Edit(ps *Pubsub, bd *Database, ses *Session, req *Request) Value
 		}
 	}
 
-	user := ses.Get("user").(*db.User)
+	user := t.Ses().Get("user").(*db.User)
 	if typ != 0 && old.Author != user.Id {
-		new(db.Notice).Add(bd, &db.Notice{
+		new(db.Notice).Add(&db.Notice{
 			Type:       uint64(typ),
 			Date:       time.Now(),
 			Master:     old.Author,
@@ -76,21 +78,21 @@ func (t *Topic) Edit(ps *Pubsub, bd *Database, ses *Session, req *Request) Value
 		})
 	}
 
-	ps.Publish(&Prot{Mod: "notice", Act: "list"})
+	t.Ps().Publish(&Prot{Mod: "notice", Act: "list"})
 	return &Succ{}
 }
 
 // 主题列表
-func (t *Topic) List(bd *Database, req *Request) Value {
+func (t *Topic) List() Value {
 	var s struct {
 		Page int
 		Node bson.ObjectId
 	}
-	if err := json.Unmarshal(req.Body, &s); err != nil {
+	if err := json.Unmarshal(t.Req().Body, &s); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	topic, err := t.Db.Paginate(bd, s.Node, s.Page)
+	topic, err := t.Db.Paginate(s.Node, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -99,13 +101,13 @@ func (t *Topic) List(bd *Database, req *Request) Value {
 }
 
 // 主题信息
-func (t *Topic) Info(bd *Database, req *Request) Value {
-	topic, _ := db.NewTopic(req.Body, "b")
+func (t *Topic) Info() Value {
+	topic, _ := db.NewTopic(t.Req().Body, "b")
 
-	if err := t.Db.Find(bd, topic.Id, topic); err != nil {
+	if err := t.Db.Find(topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	t.Db.Inc(bd, topic.Id, "views")
+	t.Db.Inc(topic.Id, "views")
 	return &Succ{Data: topic}
 }

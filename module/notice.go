@@ -2,19 +2,18 @@ package module
 
 import (
 	"github.com/mlgaku/back/db"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 )
 
 type Notice struct {
 	Db db.Notice
+	service.Di
 }
 
 // 获取通知列表
-func (n *Notice) List(bd *Database, ses *Session) Value {
-	dat, err := n.Db.FindByMaster(
-		bd, ses.Get("user").(*db.User).Id,
-	)
+func (n *Notice) List() Value {
+	dat, err := n.Db.FindByMaster(n.Ses().Get("user").(*db.User).Id)
 
 	if err != nil {
 		return &Fail{Msg: err.Error()}
@@ -23,21 +22,21 @@ func (n *Notice) List(bd *Database, ses *Session) Value {
 }
 
 // 移除通知
-func (n *Notice) Remove(ps *Pubsub, bd *Database, req *Request, ses *Session) Value {
-	notice, _ := db.NewNotice(req.Body, "b")
+func (n *Notice) Remove() Value {
+	notice, _ := db.NewNotice(n.Req().Body, "b")
 
-	if err := n.Db.Find(bd, notice.Id, notice); err != nil {
+	if err := n.Db.Find(notice.Id, notice); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	if notice.Master != ses.Get("user").(*db.User).Id {
+	if notice.Master != n.Ses().Get("user").(*db.User).Id {
 		return &Fail{Msg: "你不能移除别人的通知"}
 	}
 
-	if err := n.Db.ChangeReadById(bd, notice.Id, true); err != nil {
+	if err := n.Db.ChangeReadById(notice.Id, true); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	ps.Publish(&Prot{Mod: "notice", Act: "list"})
+	n.Ps().Publish(&Prot{Mod: "notice", Act: "list"})
 	return &Succ{}
 }

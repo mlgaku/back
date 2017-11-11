@@ -2,11 +2,13 @@ package module
 
 import (
 	"encoding/json"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 )
 
-type Sub struct{}
+type Sub struct {
+	service.Di
+}
 
 func (*Sub) parse(body []byte) (*Prot, error) {
 	p := &Prot{}
@@ -14,10 +16,13 @@ func (*Sub) parse(body []byte) (*Prot, error) {
 }
 
 // 添加订阅
-func (s *Sub) Add(ps *Pubsub, req *Request, res *Response) {
-	if prot, err := s.parse(req.Body); err == nil {
+func (s *Sub) Add() {
 
-		v, e := NewModule(res.Client).LoadProt(prot)
+	if prot, err := s.parse(s.Req().Body); err == nil {
+
+		res := s.Res()
+
+		v, e := service.NewModule(res.Client).LoadProt(prot)
 		if e != nil {
 			res.Write(res.Pack(*prot, &Fail{Msg: e.Error()}))
 			return
@@ -26,14 +31,14 @@ func (s *Sub) Add(ps *Pubsub, req *Request, res *Response) {
 		if v != nil {
 			res.Write(res.Pack(*prot, v))
 		}
-		ps.AddSub(prot, res)
+		s.Ps().AddSub(prot, res)
 
 	}
 }
 
 // 取消订阅
-func (s *Sub) Remove(ps *Pubsub, req *Request, res *Response) {
-	if prot, err := s.parse(req.Body); err == nil {
-		ps.RemoveSub(prot, res)
+func (s *Sub) Remove() {
+	if prot, err := s.parse(s.Req().Body); err == nil {
+		s.Ps().RemoveSub(prot, s.Res())
 	}
 }

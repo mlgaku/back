@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -16,6 +16,8 @@ type Bill struct {
 	Date   time.Time     `json:"date"`                    // 日期
 	Number int64         `json:"number"`                  // 数量
 	Master bson.ObjectId `json:"master,omitempty"`        // 所属者ID
+
+	service.Di
 }
 
 // 获得 Bill 实例
@@ -29,18 +31,18 @@ func NewBill(body []byte, typ string) (*Bill, error) {
 }
 
 // 添加
-func (*Bill) Add(db *Database, bill *Bill) error {
-	return db.C("bill").Insert(bill)
+func (b *Bill) Add(bill *Bill) error {
+	return b.Db().C("bill").Insert(bill)
 }
 
 // 通过所属者查找
-func (*Bill) FindByMaster(db *Database, master bson.ObjectId) (*[]Bill, error) {
+func (b *Bill) FindByMaster(master bson.ObjectId) (*[]Bill, error) {
 	if master == "" {
 		return nil, errors.New("所属者ID不能为空")
 	}
 
 	bill := &[]Bill{}
-	err := db.C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(bill)
+	err := b.Db().C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(bill)
 	if err != nil {
 		return nil, err
 	}

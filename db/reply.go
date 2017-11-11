@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	com "github.com/mlgaku/back/common"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
@@ -19,6 +19,8 @@ type Reply struct {
 	Topic   bson.ObjectId `fill:"i" json:"topic,omitempty" validate:"required"`
 
 	User ReplyUser `json:"user,omitempty" bson:",omitempty"`
+
+	service.Di
 }
 
 type ReplyUser struct {
@@ -37,24 +39,24 @@ func NewReply(body []byte, typ string) (*Reply, error) {
 }
 
 // 添加
-func (*Reply) Add(db *Database, reply *Reply) error {
+func (r *Reply) Add(reply *Reply) error {
 	reply.Date = time.Now()
 	reply.Content = strings.Trim(reply.Content, " ")
 
 	if err := com.NewVali().Struct(reply); err != "" {
 		return errors.New(err)
 	}
-	return db.C("reply").Insert(reply)
+	return r.Db().C("reply").Insert(reply)
 }
 
 // 通过作者查找
-func (*Reply) FindByAuthor(db *Database, author bson.ObjectId, field M, page int) (*[]Reply, error) {
+func (r *Reply) FindByAuthor(author bson.ObjectId, field M, page int) (*[]Reply, error) {
 	result := new([]Reply)
-	return result, db.C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+	return result, r.Db().C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
 }
 
 // 分页查询
-func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, error) {
+func (r *Reply) Paginate(topic bson.ObjectId, page int) (*[]Reply, error) {
 	if topic == "" {
 		return nil, errors.New("主题ID不能为空")
 	}
@@ -69,7 +71,7 @@ func (*Reply) Paginate(db *Database, topic bson.ObjectId, page int) (*[]Reply, e
 	}
 
 	reply := &[]Reply{}
-	if err := db.C("reply").Pipe(line).All(reply); err != nil {
+	if err := r.Db().C("reply").Pipe(line).All(reply); err != nil {
 		return nil, err
 	}
 

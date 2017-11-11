@@ -3,7 +3,7 @@ package module
 import (
 	"encoding/json"
 	"github.com/mlgaku/back/db"
-	. "github.com/mlgaku/back/service"
+	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
@@ -13,31 +13,32 @@ import (
 
 type Reply struct {
 	Db db.Reply
+	service.Di
 }
 
 // 添加新回复
-func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request, conf *Config) Value {
-	user := ses.Get("user").(*db.User)
+func (r *Reply) New() Value {
+	user := r.Ses().Get("user").(*db.User)
 
-	reply, _ := db.NewReply(req.Body, "i")
+	reply, _ := db.NewReply(r.Req().Body, "i")
 	reply.Author = user.Id
 
 	topic := &db.Topic{}
-	if err := topic.Find(bd, reply.Topic, topic); err != nil {
+	if err := topic.Find(reply.Topic, topic); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
 	// 添加回复
-	if err := r.Db.Add(bd, reply); err != nil {
+	if err := r.Db.Add(reply); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
 	// 更新最后回复
-	topic.UpdateReply(bd, reply.Topic, user.Name)
+	topic.UpdateReply(reply.Topic, user.Name)
 
 	// 回复人不是主题作者时添加通知
 	if reply.Author != topic.Author {
-		new(db.Notice).Add(bd, &db.Notice{
+		new(db.Notice).Add(&db.Notice{
 			Type:       1,
 			Date:       time.Now(),
 			Master:     topic.Author,
@@ -48,12 +49,13 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request, conf *
 	}
 
 	// 通知被at的人
-	r.handleAt(bd, user.Name, topic, reply)
+	r.handleAt(user.Name, topic, reply)
 
 	// 更新余额
+	conf := r.Conf()
 	if conf.Reward.NewReply != 0 {
-		new(db.User).Inc(bd, reply.Author, "balance", conf.Reward.NewReply)
-		new(db.Bill).Add(bd, &db.Bill{
+		new(db.User).Inc(reply.Author, "balance", conf.Reward.NewReply)
+		new(db.Bill).Add(&db.Bill{
 			Msg:    topic.Title,
 			Type:   2,
 			Date:   time.Now(),
@@ -62,22 +64,22 @@ func (r *Reply) New(bd *Database, ps *Pubsub, ses *Session, req *Request, conf *
 		})
 	}
 
-	ps.Publish(&Prot{Mod: "reply", Act: "list"})
-	ps.Publish(&Prot{Mod: "notice", Act: "list"})
+	r.Ps().Publish(&Prot{Mod: "reply", Act: "list"})
+	r.Ps().Publish(&Prot{Mod: "notice", Act: "list"})
 	return &Succ{}
 }
 
 // 获取回复列表
-func (r *Reply) List(db *Database, req *Request) Value {
+func (r *Reply) List() Value {
 	var s struct {
 		Page  int
 		Topic bson.ObjectId
 	}
-	if err := json.Unmarshal(req.Body, &s); err != nil {
+	if err := json.Unmarshal(r.Req().Body, &s); err != nil {
 		return &Fail{Msg: err.Error()}
 	}
 
-	reply, err := r.Db.Paginate(db, s.Topic, s.Page)
+	reply, err := r.Db.Paginate(s.Topic, s.Page)
 	if err != nil {
 		return &Fail{Msg: err.Error()}
 	}
@@ -86,7 +88,7 @@ func (r *Reply) List(db *Database, req *Request) Value {
 }
 
 // 处理 At
-func (*Reply) handleAt(bd *Database, name string, topic *db.Topic, reply *db.Reply) {
+func (*Reply) handleAt(name string, topic *db.Topic, reply *db.Reply) {
 	match := regexp.MustCompile(`@[a-zA-Z0-9]+`).FindAllString(reply.Content, 5)
 	if match == nil {
 		return
@@ -96,7 +98,7 @@ func (*Reply) handleAt(bd *Database, name string, topic *db.Topic, reply *db.Rep
 		match[k] = strings.TrimLeft(v, "@")
 	}
 
-	user, err := new(db.User).FindByNameMany(bd, match)
+	user, err := new(db.User).FindByNameMany(match)
 	if err != nil {
 		return
 	}
@@ -107,7 +109,7 @@ func (*Reply) handleAt(bd *Database, name string, topic *db.Topic, reply *db.Rep
 			continue
 		}
 
-		new(db.Notice).Add(bd, &db.Notice{
+		new(db.Notice).Add(&db.Notice{
 			Type:       2,
 			Date:       time.Now(),
 			Master:     v.Id,
