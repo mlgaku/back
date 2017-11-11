@@ -8,6 +8,7 @@ import (
 
 type Node struct {
 	db db.Node
+
 	service.Di
 }
 

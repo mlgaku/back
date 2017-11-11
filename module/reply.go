@@ -12,13 +12,15 @@ import (
 )
 
 type Reply struct {
-	db db.Reply
+	db  db.Reply
+	com common
+
 	service.Di
 }
 
 // 添加新回复
 func (r *Reply) New() Value {
-	user := r.Ses().Get("user").(*db.User)
+	user := r.com.user()
 
 	reply, _ := db.NewReply(r.Req().Body, "i")
 	reply.Author = user.Id
