@@ -47,7 +47,7 @@ func (m *Module) LoadProt(prot *types.Prot) (types.Value, error) {
 }
 
 // 调用方法
-func (m *Module) invoke() (types.Value, error) {
+func (m *Module) invoke() (val types.Value, err error) {
 	r, ok := APP.Route[m.Prot.Mod]
 	if !ok {
 		return nil, fmt.Errorf("%s module does not exist", m.Prot.Mod)
@@ -59,8 +59,8 @@ func (m *Module) invoke() (types.Value, error) {
 	}
 
 	// 中间件
-	if err := m.middle(); err != nil {
-		return nil, err
+	if err = m.middle(); err != nil {
+		return
 	}
 
 	// 填充当前 module 状态
@@ -71,18 +71,26 @@ func (m *Module) invoke() (types.Value, error) {
 	}
 
 	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-			debug.PrintStack()
+		if re := recover(); re != nil {
+			switch x := re.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+				log.Println(re)
+				debug.PrintStack()
+			default:
+				err = errors.New("Unknown panic")
+			}
 		}
 	}()
 
 	// 调用方法
 	if res := mth.Call(nil); len(res) > 0 {
-		return res[0].Interface(), nil
+		val = res[0].Interface()
 	}
 
-	return nil, nil
+	return
 }
 
 // 中间件

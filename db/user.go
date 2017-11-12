@@ -29,13 +29,13 @@ type User struct {
 }
 
 // 获得 User 实例
-func NewUser(body []byte, typ string) (*User, error) {
+func NewUser(body []byte, typ string) *User {
 	user := &User{}
 	if err := com.ParseJSON(body, typ, user); err != nil {
 		panic(err)
 	}
 
-	return user, nil
+	return user
 }
 
 // 添加

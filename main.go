@@ -35,7 +35,7 @@ func main() {
 
 // 处理消息
 func handle(cli *Client, prim []byte) {
-	res, mod := NewResponse(cli), NewModule(cli)
+	mod, res := NewModule(cli), NewResponse(cli)
 
 	val, err := mod.Load(prim)
 	if err != nil {

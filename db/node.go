@@ -21,13 +21,13 @@ type Node struct {
 }
 
 // 获得 Node 实例
-func NewNode(body []byte, typ string) (*Node, error) {
+func NewNode(body []byte, typ string) *Node {
 	node := &Node{}
 	if err := com.ParseJSON(body, typ, node); err != nil {
 		panic(err)
 	}
 
-	return node, nil
+	return node
 }
 
 // 添加

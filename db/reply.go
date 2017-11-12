@@ -29,13 +29,13 @@ type ReplyUser struct {
 }
 
 // 获得 Reply 实例
-func NewReply(body []byte, typ string) (*Reply, error) {
+func NewReply(body []byte, typ string) *Reply {
 	reply := &Reply{}
 	if err := com.ParseJSON(body, typ, reply); err != nil {
 		panic(err)
 	}
 
-	return reply, nil
+	return reply
 }
 
 // 添加

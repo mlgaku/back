@@ -27,13 +27,13 @@ type Notice struct {
 }
 
 // 获得 Notice 实例
-func NewNotice(body []byte, typ string) (*Notice, error) {
+func NewNotice(body []byte, typ string) *Notice {
 	notice := &Notice{}
 	if err := com.ParseJSON(body, typ, notice); err != nil {
 		panic(err)
 	}
 
-	return notice, nil
+	return notice
 }
 
 // 添加

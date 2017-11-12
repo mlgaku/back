@@ -33,13 +33,13 @@ type TopicUser struct {
 }
 
 // 获得 Topic 实例
-func NewTopic(body []byte, typ string) (*Topic, error) {
+func NewTopic(body []byte, typ string) *Topic {
 	topic := &Topic{}
 	if err := com.ParseJSON(body, typ, topic); err != nil {
 		panic(err)
 	}
 
-	return topic, nil
+	return topic
 }
 
 // 添加

@@ -24,7 +24,7 @@ func (n *Notice) List() Value {
 
 // 移除通知
 func (n *Notice) Remove() Value {
-	notice, _ := db.NewNotice(n.Req().Body, "b")
+	notice := db.NewNotice(n.Req().Body, "b")
 
 	if err := n.db.Find(notice.Id, notice); err != nil {
 		return &Fail{Msg: err.Error()}

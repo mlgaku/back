@@ -27,7 +27,7 @@ type (
 
 // 注册
 func (u *User) Reg() Value {
-	user, _ := db.NewUser(u.Req().Body, "i")
+	user := db.NewUser(u.Req().Body, "i")
 
 	user.RegIP, _ = com.IPAddr(u.Req().RemoteAddr())
 	if err := u.db.Add(user, u.Conf().Secret.Salt); err != nil {
@@ -39,7 +39,7 @@ func (u *User) Reg() Value {
 
 // 登录
 func (u *User) Login() Value {
-	user, _ := db.NewUser(u.Req().Body, "b")
+	user := db.NewUser(u.Req().Body, "b")
 	if user.Password == "" {
 		return &Fail{Msg: "密码不能为空"}
 	}
@@ -65,7 +65,7 @@ func (u *User) Login() Value {
 
 // 用户主页
 func (u *User) Home() Value {
-	user, _ := db.NewUser(u.Req().Body, "b")
+	user := db.NewUser(u.Req().Body, "b")
 	home := &userHome{}
 
 	err := error(nil)
@@ -104,7 +104,7 @@ func (u *User) Info() Value {
 
 // 检查用户名是否已被注册
 func (u *User) Check() Value {
-	user, _ := db.NewUser(u.Req().Body, "b")
+	user := db.NewUser(u.Req().Body, "b")
 
 	b, err := u.db.NameExists(user.Name)
 	if err != nil {
@@ -116,7 +116,7 @@ func (u *User) Check() Value {
 
 // 检查邮箱地址是否已存在
 func (u *User) CheckEmail() Value {
-	user, _ := db.NewUser(u.Req().Body, "b")
+	user := db.NewUser(u.Req().Body, "b")
 
 	b, err := u.db.EmailExists(user.Email)
 	if err != nil {
@@ -178,7 +178,7 @@ func (u *User) RemoveAvatar() Value {
 
 // 编辑资料
 func (u *User) EditProfile() Value {
-	user, _ := db.NewUser(u.Req().Body, "u")
+	user := db.NewUser(u.Req().Body, "u")
 
 	if err := u.db.Save(u.Ses().Get("user").(*db.User).Id, user); err != nil {
 		return &Fail{Msg: err.Error()}

@@ -17,7 +17,7 @@ type Topic struct {
 
 // 发表新主题
 func (t *Topic) New() Value {
-	topic, _ := db.NewTopic(t.Req().Body, "i")
+	topic := db.NewTopic(t.Req().Body, "i")
 	topic.Author = t.Ses().Get("user").(*db.User).Id
 
 	id, err := t.db.Add(topic)
@@ -43,7 +43,7 @@ func (t *Topic) New() Value {
 
 // 编辑主题
 func (t *Topic) Edit() Value {
-	topic, _ := db.NewTopic(t.Req().Body, "u")
+	topic := db.NewTopic(t.Req().Body, "u")
 
 	old := &db.Topic{}
 	if err := t.db.Find(topic.Id, old); err != nil {
@@ -103,7 +103,7 @@ func (t *Topic) List() Value {
 
 // 主题信息
 func (t *Topic) Info() Value {
-	topic, _ := db.NewTopic(t.Req().Body, "b")
+	topic := db.NewTopic(t.Req().Body, "b")
 
 	if err := t.db.Find(topic.Id, topic); err != nil {
 		return &Fail{Msg: err.Error()}

@@ -21,13 +21,13 @@ type Bill struct {
 }
 
 // 获得 Bill 实例
-func NewBill(body []byte, typ string) (*Bill, error) {
+func NewBill(body []byte, typ string) *Bill {
 	bill := &Bill{}
 	if err := com.ParseJSON(body, typ, bill); err != nil {
 		panic(err)
 	}
 
-	return bill, nil
+	return bill
 }
 
 // 添加
