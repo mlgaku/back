@@ -14,10 +14,7 @@ type Bill struct {
 
 // 获取账单列表
 func (b *Bill) List() Value {
-	dat, err := b.db.FindByMaster(b.Ses().Get("user").(*db.User).Id)
-	if err != nil {
-		return &Fail{Msg: err.Error()}
+	return &Succ{
+		Data: b.db.FindByMaster(b.Ses().Get("user").(*db.User).Id),
 	}
-
-	return &Succ{Data: dat}
 }

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -33,23 +32,24 @@ type TopicUser struct {
 }
 
 // 获得 Topic 实例
-func NewTopic(body []byte, typ string) *Topic {
-	topic := &Topic{}
+func NewTopic(body []byte, typ string) (topic *Topic) {
+	topic = &Topic{}
+
 	if err := com.ParseJSON(body, typ, topic); err != nil {
 		panic(err)
 	}
 
-	return topic
+	return
 }
 
 // 添加
-func (t *Topic) Add(topic *Topic) (bson.ObjectId, error) {
+func (t *Topic) Add(topic *Topic) bson.ObjectId {
 	if err := com.NewVali().Struct(topic); err != "" {
-		return "", errors.New(err)
+		panic(err)
 	}
 
 	if c, _ := t.C("node").FindId(topic.Node).Count(); c != 1 {
-		return "", errors.New("所属节点不存在")
+		panic("所属节点不存在")
 	}
 
 	topic.Id = bson.NewObjectId()
@@ -58,62 +58,68 @@ func (t *Topic) Add(topic *Topic) (bson.ObjectId, error) {
 	topic.Content = strings.Trim(topic.Content, " ")
 
 	if err := t.C("topic").Insert(topic); err != nil {
-		return "", err
+		panic(err.Error())
 	}
 
-	return topic.Id, nil
+	return topic.Id
 }
 
 // 递增
-func (t *Topic) Inc(id bson.ObjectId, field string) error {
+func (t *Topic) Inc(id bson.ObjectId, field string) {
 	if id == "" {
-		return errors.New("未指定主题ID")
+		panic("未指定主题ID")
 	}
-	return t.C("topic").UpdateId(id, M{"$inc": M{field: 1}})
+
+	if err := t.C("topic").UpdateId(id, M{"$inc": M{field: 1}}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 查找
-func (t *Topic) Find(id bson.ObjectId, topic *Topic) error {
+func (t *Topic) Find(id bson.ObjectId) (topic *Topic) {
 	if id == "" {
-		return errors.New("未指定主题ID")
+		panic("未指定主题ID")
 	}
 
-	if err := t.C("topic").FindId(id).One(topic); err != nil {
-		return errors.New("主题信息获取失败")
+	if err := t.C("topic").FindId(id).One(&topic); err != nil {
+		panic("主题信息获取失败")
 	}
 
-	if err := new(User).Find(topic.Author, &topic.User, M{
-		"name":   1,
-		"avatar": 1,
-	}); err != nil {
-		return errors.New("用户信息获取失败")
-	}
+	user := new(User).Find(topic.Author, M{"name": 1, "avatar": 1})
+	topic.User.Name = user.Name
+	topic.User.Avatar = user.Avatar
 
-	return nil
+	return
 }
 
 // 通过作者查找
-func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int) (*[]Topic, error) {
-	result := new([]Topic)
-	return result, t.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(result)
+func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int) (topic []*Topic) {
+	err := t.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(&topic)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return
 }
 
 // 保存
-func (t *Topic) Save(id bson.ObjectId, topic *Topic) error {
+func (t *Topic) Save(id bson.ObjectId, topic *Topic) {
 	if id == "" {
-		return errors.New("主题ID不能为空")
+		panic("主题ID不能为空")
 	}
 
 	set, err := com.Extract(topic, "u")
 	if err != nil {
-		return err
+		panic(err.Error())
 	}
 
-	return t.C("topic").UpdateId(id, M{"$set": set})
+	if err := t.C("topic").UpdateId(id, M{"$set": set}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 分页查询
-func (t *Topic) Paginate(node bson.ObjectId, page int) (*[]Topic, error) {
+func (t *Topic) Paginate(node bson.ObjectId, page int) (topic []*Topic) {
 	line := []M{
 		{"$skip": page * 20},
 		{"$limit": 20},
@@ -128,22 +134,24 @@ func (t *Topic) Paginate(node bson.ObjectId, page int) (*[]Topic, error) {
 		}, line[:]...)
 	}
 
-	topic := &[]Topic{}
-	if err := t.C("topic").Pipe(line).All(topic); err != nil {
-		return nil, err
+	if err := t.C("topic").Pipe(line).All(&topic); err != nil {
+		panic(err.Error())
 	}
 
-	return topic, nil
+	return
 }
 
 // 更新回复
-func (t *Topic) UpdateReply(id bson.ObjectId, name string) error {
+func (t *Topic) UpdateReply(id bson.ObjectId, name string) {
 	switch {
 	case id == "":
-		return errors.New("主题ID不能为空")
+		panic("主题ID不能为空")
 	case name == "":
-		return errors.New("最后回复人名字不能为空")
+		panic("最后回复人名字不能为空")
 	}
 
-	return t.C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
+	err := t.C("topic").UpdateId(id, M{"$inc": M{"replies": 1}, "$set": M{"last_reply": name}})
+	if err != nil {
+		panic(err.Error())
+	}
 }

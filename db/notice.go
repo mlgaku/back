@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -27,53 +26,57 @@ type Notice struct {
 }
 
 // 获得 Notice 实例
-func NewNotice(body []byte, typ string) *Notice {
-	notice := &Notice{}
+func NewNotice(body []byte, typ string) (notice *Notice) {
+	notice = &Notice{}
+
 	if err := com.ParseJSON(body, typ, notice); err != nil {
 		panic(err)
 	}
 
-	return notice
+	return
 }
 
 // 添加
-func (n *Notice) Add(notice *Notice) error {
-	return n.C("notice").Insert(notice)
+func (n *Notice) Add(notice *Notice) {
+	if err := n.C("notice").Insert(notice); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 查找
-func (n *Notice) Find(id bson.ObjectId, notice *Notice) error {
+func (n *Notice) Find(id bson.ObjectId) (notice *Notice) {
 	if id == "" {
-		return errors.New("未指定通知ID")
+		panic("未指定通知ID")
 	}
 
-	if err := n.C("notice").FindId(id).One(notice); err != nil {
-		return err
+	if err := n.C("notice").FindId(id).One(&notice); err != nil {
+		panic(err.Error())
 	}
 
-	return nil
+	return
 }
 
 // 通过所属者查找
-func (n *Notice) FindByMaster(master bson.ObjectId) (*[]Notice, error) {
+func (n *Notice) FindByMaster(master bson.ObjectId) (notices []*Notice) {
 	if master == "" {
-		return nil, errors.New("所属者ID不能为空")
+		panic("所属者ID不能为空")
 	}
 
-	notices := &[]Notice{}
-	err := n.C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(notices)
+	err := n.C("notice").Find(M{"read": false, "master": master}).Select(M{"read": 0, "master": 0}).All(&notices)
 	if err != nil {
-		return nil, err
+		panic(err.Error())
 	}
 
-	return notices, nil
+	return
 }
 
 // 通过ID修改已读状态
-func (n *Notice) ChangeReadById(id bson.ObjectId, read bool) error {
+func (n *Notice) ChangeReadById(id bson.ObjectId, read bool) {
 	if id == "" {
-		return errors.New("通知ID不能为空")
+		panic("通知ID不能为空")
 	}
 
-	return n.C("notice").UpdateId(id, M{"$set": M{"read": read}})
+	if err := n.C("notice").UpdateId(id, M{"$set": M{"read": read}}); err != nil {
+		panic(err.Error())
+	}
 }

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -29,79 +28,92 @@ type User struct {
 }
 
 // 获得 User 实例
-func NewUser(body []byte, typ string) *User {
-	user := &User{}
+func NewUser(body []byte, typ string) (user *User) {
+	user = &User{}
+
 	if err := com.ParseJSON(body, typ, user); err != nil {
 		panic(err)
 	}
 
-	return user
+	return
 }
 
 // 添加
-func (u *User) Add(user *User, salt string) error {
+func (u *User) Add(user *User, salt string) {
 	if err := com.NewVali().Struct(user); err != "" {
-		return errors.New(err)
+		panic(err)
 	}
 
 	user.RegDate = time.Now()
 	user.Password = com.Sha1(user.Password, salt)
-	return u.C("user").Insert(user)
+	if err := u.C("user").Insert(user); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 递增
-func (u *User) Inc(id bson.ObjectId, field string, num int64) error {
+func (u *User) Inc(id bson.ObjectId, field string, num int64) {
 	if id == "" {
-		return errors.New("未指定用户ID")
+		panic("未指定用户ID")
 	}
-	return u.C("user").UpdateId(id, M{"$inc": M{field: num}})
+
+	if err := u.C("user").UpdateId(id, M{"$inc": M{field: num}}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 查找
-func (u *User) Find(id bson.ObjectId, user interface{}, field M) error {
-	return u.C("user").FindId(id).Select(field).One(user)
+func (u *User) Find(id bson.ObjectId, field M) (user *User) {
+	if err := u.C("user").FindId(id).Select(field).One(&user); err != nil {
+		panic(err.Error())
+	}
+
+	return
 }
 
 // 保存
-func (u *User) Save(id bson.ObjectId, user *User) error {
+func (u *User) Save(id bson.ObjectId, user *User) {
 	if id == "" {
-		return errors.New("用户ID不能为空")
+		panic("用户ID不能为空")
 	}
 
 	set, err := com.Extract(user, "u")
 	if err != nil {
-		return err
+		panic(err.Error())
 	}
 
-	return u.C("user").UpdateId(id, M{"$set": set})
+	if err := u.C("user").UpdateId(id, M{"$set": set}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 更新
-func (u *User) Update(id bson.ObjectId, user M) error {
-	return u.C("user").UpdateId(id, M{"$set": user})
+func (u *User) Update(id bson.ObjectId, user M) {
+	if err := u.C("user").UpdateId(id, M{"$set": user}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 通过用户名查找
-func (u *User) FindByName(name string, field M) (*User, error) {
+func (u *User) FindByName(name string, field M) (user *User) {
 	if name == "" {
-		return nil, errors.New("用户名不能为空")
+		panic("用户名不能为空")
 	}
 
-	user := &User{}
-	if err := u.C("user").Find(M{"name": name}).Select(field).One(user); err != nil {
-		return nil, errors.New(err.Error())
+	if err := u.C("user").Find(M{"name": name}).Select(field).One(&user); err != nil {
+		panic(err.Error())
 	}
 
-	return user, nil
+	return
 }
 
 // 通过用户名查找多个
-func (u *User) FindByNameMany(name []string) (map[string]User, error) {
+func (u *User) FindByNameMany(name []string) (user map[string]User) {
 	if len(name) < 1 {
-		return nil, nil
+		return nil
 	}
 
-	in, user := []string{}, map[string]User{}
+	in := []string{}
 	for _, v := range name {
 		if _, ok := user[v]; !ok {
 			user[v] = User{}
@@ -115,40 +127,46 @@ func (u *User) FindByNameMany(name []string) (map[string]User, error) {
 	for _, v := range result {
 		user[v.Name] = v
 	}
-	return user, nil
+	return user
 }
 
 // 用户名是否存在
-func (u *User) NameExists(name string) (bool, error) {
+func (u *User) NameExists(name string) bool {
 	if name == "" {
-		return false, errors.New("用户名不能为空")
+		panic("用户名不能为空")
 	}
 
-	if c, _ := u.C("user").Find(M{"name": name}).Count(); c > 0 {
-		return true, nil
+	if c, err := u.C("user").Find(M{"name": name}).Count(); err != nil {
+		panic(err.Error())
+	} else if c > 0 {
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 // 邮箱地址是否存在
-func (u *User) EmailExists(email string) (bool, error) {
+func (u *User) EmailExists(email string) bool {
 	if email == "" {
-		return false, errors.New("邮箱地址不能为空")
+		panic("邮箱地址不能为空")
 	}
 
-	if c, _ := u.C("user").Find(M{"email": email}).Count(); c > 0 {
-		return true, nil
+	if c, err := u.C("user").Find(M{"email": email}).Count(); err != nil {
+		panic(err.Error())
+	} else if c > 0 {
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 // 通过ID修改头像状态
-func (u *User) ChangeAvatarById(id bson.ObjectId, avatar bool) error {
+func (u *User) ChangeAvatarById(id bson.ObjectId, avatar bool) {
 	if id == "" {
-		return errors.New("用户ID不能为空")
+		panic("用户ID不能为空")
 	}
 
-	return u.C("user").UpdateId(id, M{"$set": M{"avatar": avatar}})
+	if err := u.C("user").UpdateId(id, M{"$set": M{"avatar": avatar}}); err != nil {
+		panic(err.Error())
+	}
 }

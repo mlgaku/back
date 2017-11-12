@@ -20,10 +20,7 @@ func (t *Topic) New() Value {
 	topic := db.NewTopic(t.Req().Body, "i")
 	topic.Author = t.Ses().Get("user").(*db.User).Id
 
-	id, err := t.db.Add(topic)
-	if err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	id := t.db.Add(topic)
 
 	// 更新余额
 	conf := t.Conf()
@@ -45,14 +42,8 @@ func (t *Topic) New() Value {
 func (t *Topic) Edit() Value {
 	topic := db.NewTopic(t.Req().Body, "u")
 
-	old := &db.Topic{}
-	if err := t.db.Find(topic.Id, old); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
-
-	if err := t.db.Save(topic.Id, topic); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	old := t.db.Find(topic.Id)
+	t.db.Save(topic.Id, topic)
 
 	// 添加通知
 	typ := 0
@@ -93,21 +84,12 @@ func (t *Topic) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	topic, err := t.db.Paginate(s.Node, s.Page)
-	if err != nil {
-		return &Fail{Msg: err.Error()}
-	}
-
-	return &Succ{Data: topic}
+	return &Succ{Data: t.db.Paginate(s.Node, s.Page)}
 }
 
 // 主题信息
 func (t *Topic) Info() Value {
-	topic := db.NewTopic(t.Req().Body, "b")
-
-	if err := t.db.Find(topic.Id, topic); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	topic := t.db.Find(db.NewTopic(t.Req().Body, "b").Id)
 
 	t.db.Inc(topic.Id, "views")
 	return &Succ{Data: topic}

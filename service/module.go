@@ -77,11 +77,12 @@ func (m *Module) invoke() (val types.Value, err error) {
 				err = errors.New(x)
 			case error:
 				err = x
-				log.Println(re)
-				debug.PrintStack()
 			default:
 				err = errors.New("Unknown panic")
 			}
+
+			log.Println(re)
+			debug.PrintStack()
 		}
 	}()
 

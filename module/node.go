@@ -18,16 +18,12 @@ func (n *Node) Add() Value {
 
 	// 检查父节点
 	if node.Parent != "" {
-		if b, err := n.db.IdExists(node.Parent); err != nil {
-			return &Fail{Msg: err.Error()}
-		} else if !b {
+		if b := n.db.IdExists(node.Parent); !b {
 			return &Fail{Msg: "父节点不存在"}
 		}
 	}
 
-	if err := n.db.Add(node); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	n.db.Add(node)
 
 	n.Ps().Publish(&Prot{Mod: "node", Act: "list"})
 	return &Succ{}
@@ -39,16 +35,12 @@ func (n *Node) Edit() Value {
 
 	// 检查父节点
 	if node.Parent != "" {
-		if b, err := n.db.IdExists(node.Parent); err != nil {
-			return &Fail{Msg: err.Error()}
-		} else if !b {
+		if b := n.db.IdExists(node.Parent); !b {
 			return &Fail{Msg: "父节点不存在"}
 		}
 	}
 
-	if err := n.db.Save(node.Id, node); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	n.db.Save(node.Id, node)
 
 	n.Ps().Publish(&Prot{Mod: "node", Act: "list"})
 	return &Succ{}
@@ -56,20 +48,13 @@ func (n *Node) Edit() Value {
 
 // 获取节点列表
 func (n *Node) List() Value {
-	node, err := n.db.FindAll()
-	if err != nil {
-		return &Fail{Msg: err.Error()}
-	}
-
-	return &Succ{Data: node}
+	return &Succ{Data: n.db.FindAll()}
 }
 
 // 获取节点信息
 func (n *Node) Info() Value {
 	node := db.NewNode(n.Req().Body, "b")
-	if err := n.db.FindByIdOrName(node); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	n.db.FindByIdOrName(node)
 
 	return &Succ{Data: node}
 }
@@ -79,22 +64,16 @@ func (n *Node) Remove() Value {
 	node := db.NewNode(n.Req().Body, "b")
 
 	// 检查子节点
-	if b, err := n.db.HasChild(node.Id); err != nil {
-		return &Fail{Msg: err.Error()}
-	} else if b {
-		return &Fail{Msg: "删除失败: 该节点下有子节点存在"}
+	if b := n.db.HasChild(node.Id); b {
+		return &Fail{Msg: "删除失败：该节点下有子节点存在"}
 	}
 
 	// 检查节点下是否还有主题存在
-	if b, err := n.db.HasTopic(node.Id); err != nil {
-		return &Fail{Msg: err.Error()}
-	} else if b {
-		return &Fail{Msg: "删除失败: 该节点下还有主题存在"}
+	if b := n.db.HasTopic(node.Id); b {
+		return &Fail{Msg: "删除失败：该节点下还有主题存在"}
 	}
 
-	if err := n.db.RemoveById(node.Id); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	n.db.RemoveById(node.Id)
 
 	n.Ps().Publish(&Prot{Mod: "node", Act: "list"})
 	return &Succ{}
@@ -103,9 +82,5 @@ func (n *Node) Remove() Value {
 // 检查节点名是否可用
 func (n *Node) Check() Value {
 	node := db.NewNode(n.Req().Body, "b")
-	if b, err := n.db.NameExists(node.Name); err != nil {
-		return &Fail{Msg: err.Error()}
-	} else {
-		return &Succ{Data: !b}
-	}
+	return &Succ{Data: !n.db.NameExists(node.Name)}
 }

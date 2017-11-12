@@ -24,15 +24,10 @@ func (r *Reply) New() Value {
 	reply := db.NewReply(r.Req().Body, "i")
 	reply.Author = user.Id
 
-	topic := &db.Topic{}
-	if err := topic.Find(reply.Topic, topic); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	topic := new(db.Topic).Find(reply.Topic)
 
 	// 添加回复
-	if err := r.db.Add(reply); err != nil {
-		return &Fail{Msg: err.Error()}
-	}
+	r.db.Add(reply)
 
 	// 更新最后回复
 	topic.UpdateReply(reply.Topic, user.Name)
@@ -80,12 +75,7 @@ func (r *Reply) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	reply, err := r.db.Paginate(s.Topic, s.Page)
-	if err != nil {
-		return &Fail{Msg: err.Error()}
-	}
-
-	return &Succ{Data: reply}
+	return &Succ{Data: r.db.Paginate(s.Topic, s.Page)}
 }
 
 // 处理 At
@@ -99,10 +89,7 @@ func (*Reply) handleAt(name string, topic *db.Topic, reply *db.Reply) {
 		match[k] = strings.TrimLeft(v, "@")
 	}
 
-	user, err := new(db.User).FindByNameMany(match)
-	if err != nil {
-		return
-	}
+	user := new(db.User).FindByNameMany(match)
 
 	for k, v := range user {
 		// 跳过@自己

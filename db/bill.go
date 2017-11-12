@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -21,31 +20,33 @@ type Bill struct {
 }
 
 // 获得 Bill 实例
-func NewBill(body []byte, typ string) *Bill {
-	bill := &Bill{}
+func NewBill(body []byte, typ string) (bill *Bill) {
+	bill = &Bill{}
+
 	if err := com.ParseJSON(body, typ, bill); err != nil {
 		panic(err)
 	}
 
-	return bill
+	return
 }
 
 // 添加
-func (b *Bill) Add(bill *Bill) error {
-	return b.C("bill").Insert(bill)
+func (b *Bill) Add(bill *Bill) {
+	if err := b.C("bill").Insert(bill); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 通过所属者查找
-func (b *Bill) FindByMaster(master bson.ObjectId) (*[]Bill, error) {
+func (b *Bill) FindByMaster(master bson.ObjectId) (bill []*Bill) {
 	if master == "" {
-		return nil, errors.New("所属者ID不能为空")
+		panic("所属者ID不能为空")
 	}
 
-	bill := &[]Bill{}
-	err := b.C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(bill)
+	err := b.C("bill").Find(M{"master": master}).Select(M{"master": 0}).All(&bill)
 	if err != nil {
-		return nil, err
+		panic(err.Error())
 	}
 
-	return bill, nil
+	return
 }

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	com "github.com/mlgaku/back/common"
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
@@ -21,114 +20,124 @@ type Node struct {
 }
 
 // 获得 Node 实例
-func NewNode(body []byte, typ string) *Node {
-	node := &Node{}
+func NewNode(body []byte, typ string) (node *Node) {
+	node = &Node{}
+
 	if err := com.ParseJSON(body, typ, node); err != nil {
 		panic(err)
 	}
 
-	return node
+	return
 }
 
 // 添加
-func (n *Node) Add(node *Node) error {
+func (n *Node) Add(node *Node) {
 	if err := com.NewVali().Struct(node); err != "" {
-		return errors.New(err)
+		panic(err)
 	}
 
-	return n.C("node").Insert(node)
+	if err := n.C("node").Insert(node); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 保存
-func (n *Node) Save(id bson.ObjectId, node *Node) error {
+func (n *Node) Save(id bson.ObjectId, node *Node) {
 	if id == "" {
-		return errors.New("节点ID不能为空")
+		panic("节点ID不能为空")
 	}
 
 	set, err := com.Extract(node, "u")
 	if err != nil {
-		return err
+		panic(err.Error())
 	}
 
-	return n.C("node").UpdateId(id, M{"$set": set})
+	if err := n.C("node").UpdateId(id, M{"$set": set}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 查找所有
-func (n *Node) FindAll() (*[]Node, error) {
-	node := &[]Node{}
-	if err := n.C("node").Find(M{}).All(node); err != nil {
-		return nil, err
+func (n *Node) FindAll() (node []*Node) {
+	if err := n.C("node").Find(nil).All(&node); err != nil {
+		panic(err.Error())
 	}
 
-	return node, nil
+	return
 }
 
 // 节点ID是否存在
-func (n *Node) IdExists(id bson.ObjectId) (bool, error) {
+func (n *Node) IdExists(id bson.ObjectId) bool {
 	if c, err := n.C("node").FindId(id).Count(); err != nil {
-		return false, err
+		panic(err.Error())
 	} else if c != 1 {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // 节点名是否存在
-func (n *Node) NameExists(name string) (bool, error) {
+func (n *Node) NameExists(name string) bool {
 	if name == "" {
-		return false, errors.New("节点名不能为空")
+		panic("节点名不能为空")
 	}
 
 	if c, err := n.C("node").Find(M{"name": name}).Count(); err != nil {
-		return false, err
+		panic(err.Error())
 	} else if c < 1 {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // 是否有子节点存在
-func (n *Node) HasChild(id bson.ObjectId) (bool, error) {
+func (n *Node) HasChild(id bson.ObjectId) bool {
 	if c, err := n.C("node").Find(M{"parent": id}).Count(); err != nil {
-		return false, err
+		panic(err.Error())
 	} else if c < 1 {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // 节点下是否有主题存在
-func (n *Node) HasTopic(id bson.ObjectId) (bool, error) {
+func (n *Node) HasTopic(id bson.ObjectId) bool {
 	if c, err := n.C("topic").Find(M{"node": id}).Count(); err != nil {
-		return false, err
+		panic(err.Error())
 	} else if c < 1 {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // 通过ID或名称查找
-func (n *Node) FindByIdOrName(node *Node) error {
+func (n *Node) FindByIdOrName(node *Node) (result *Node) {
 	var q *mgo.Query
 	if node.Id != "" {
 		q = n.C("node").FindId(node.Id)
 	} else if node.Name != "" {
 		q = n.C("node").Find(M{"name": node.Name})
 	} else {
-		return errors.New("ID 或名称不能为空")
+		panic("ID 或名称不能为空")
 	}
 
-	return q.One(node)
+	if err := q.One(&result); err != nil {
+		panic(err.Error())
+	}
+
+	return
 }
 
-func (n *Node) RemoveById(id bson.ObjectId) error {
+func (n *Node) RemoveById(id bson.ObjectId) {
 	if id == "" {
-		return errors.New("ID 不能为空")
+		panic("ID 不能为空")
 	}
 
-	return n.C("node").RemoveId(id)
+	if err := n.C("node").RemoveId(id); err != nil {
+		panic(err.Error())
+	}
 }
