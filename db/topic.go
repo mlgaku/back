@@ -123,6 +123,7 @@ func (t *Topic) Paginate(node bson.ObjectId, page int) (topic []*Topic) {
 	line := []M{
 		{"$skip": page * 20},
 		{"$limit": 20},
+		{"$sort": M{"date": -1}},
 		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
 		{"$project": M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.avatar": 1}},
