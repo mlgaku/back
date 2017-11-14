@@ -6,6 +6,7 @@ import (
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"math"
 	"time"
 )
 
@@ -84,7 +85,11 @@ func (t *Topic) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	return &Succ{Data: t.db.Paginate(s.Node, s.Page)}
+	return &Succ{Data: M{
+		"page":  s.Page,
+		"total": math.Ceil(float64(t.db.Count(s.Node)) / 20),
+		"list":  t.db.Paginate(s.Node, s.Page, 20),
+	}}
 }
 
 // 主题信息

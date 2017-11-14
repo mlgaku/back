@@ -118,11 +118,33 @@ func (t *Topic) Save(id bson.ObjectId, topic *Topic) {
 	}
 }
 
+// 统计
+func (t *Topic) Count(node bson.ObjectId) (c int) {
+	err := error(nil)
+
+	if node == "" {
+		if c, err = t.C("topic").Count(); err != nil {
+			panic(err.Error())
+		}
+		return
+	}
+
+	if c, err = t.C("topic").Find(M{"node": node}).Count(); err != nil {
+		panic(err.Error())
+	}
+
+	return
+}
+
 // 分页查询
-func (t *Topic) Paginate(node bson.ObjectId, page int) (topic []*Topic) {
+func (t *Topic) Paginate(node bson.ObjectId, page int, num int) (topic []*Topic) {
+	if page < 1 {
+		panic("页码选择不正确")
+	}
+
 	line := []M{
-		{"$skip": page * 20},
-		{"$limit": 20},
+		{"$skip": (page - 1) * num},
+		{"$limit": num},
 		{"$sort": M{"date": -1}},
 		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
