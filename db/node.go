@@ -16,7 +16,7 @@ type Node struct {
 	Desc   string        `fill:"iu" json:"desc,omitempty" bson:",omitempty" validate:"omitempty,min=5,max=300"` // 描述
 	Parent bson.ObjectId `fill:"iu" json:"parent,omitempty" bson:",omitempty"`                                  // 父节点 ID
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 // 获得 Node 实例

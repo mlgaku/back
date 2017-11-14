@@ -24,7 +24,7 @@ type User struct {
 	Tagline string `fill:"u" json:"tagline,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30"`
 	Website string `fill:"u" json:"website,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30,url"`
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 // 获得 User 实例

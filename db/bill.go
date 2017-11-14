@@ -16,7 +16,7 @@ type Bill struct {
 	Number int64         `json:"number"`                  // 数量
 	Master bson.ObjectId `json:"master,omitempty"`        // 所属者ID
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 // 获得 Bill 实例

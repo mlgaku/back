@@ -23,7 +23,7 @@ type Topic struct {
 
 	User TopicUser `json:"user,omitempty" bson:",omitempty"`
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 type TopicUser struct {

@@ -19,7 +19,7 @@ type Reply struct {
 
 	User ReplyUser `json:"user,omitempty" bson:",omitempty"`
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 type ReplyUser struct {

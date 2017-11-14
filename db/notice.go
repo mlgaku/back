@@ -22,7 +22,7 @@ type Notice struct {
 	ReplyID    bson.ObjectId `json:"reply_id,omitempty" bson:"reply_id,omitempty"`             // (At)回复ID
 	ReplyPage  uint64        `json:"reply_page,omitempty" bson:"reply_page,minsize,omitempty"` // (At)回复页数
 
-	service.Di
+	service.Di `json:"-" bson:"-"`
 }
 
 // 获得 Notice 实例
