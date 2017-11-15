@@ -6,6 +6,7 @@ import (
 	"github.com/mlgaku/back/service"
 	. "github.com/mlgaku/back/types"
 	"gopkg.in/mgo.v2/bson"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -75,7 +76,16 @@ func (r *Reply) List() Value {
 		return &Fail{Msg: err.Error()}
 	}
 
-	return &Succ{Data: r.db.Paginate(s.Topic, s.Page)}
+	total := math.Ceil(float64(r.db.Count(s.Topic)) / 20)
+	if s.Page == -1 {
+		s.Page = int(total)
+	}
+
+	return &Succ{Data: M{
+		"page":  s.Page,
+		"total": total,
+		"list":  r.db.Paginate(s.Topic, s.Page, 20),
+	}}
 }
 
 // 处理 At
