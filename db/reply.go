@@ -72,8 +72,18 @@ func (t *Reply) Count(topic bson.ObjectId) (c int) {
 }
 
 // 通过作者查找
-func (r *Reply) FindByAuthor(author bson.ObjectId, field M, page int) (reply []*Reply) {
-	err := r.C("reply").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(&reply)
+func (r *Reply) FindByAuthor(author bson.ObjectId, field M, page int, num int) (reply []*Reply) {
+	err := r.C("reply").Find(M{"author": author}).Skip((page - 1) * num).Limit(num).Select(field).All(&reply)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return
+}
+
+// 通过作者查找(倒序)
+func (r *Reply) FindByAuthorDesc(author bson.ObjectId, field M, page int, num int) (reply []*Reply) {
+	err := r.C("reply").Find(M{"author": author}).Sort("-date").Skip((page - 1) * num).Limit(num).Select(field).All(&reply)
 	if err != nil {
 		panic(err.Error())
 	}

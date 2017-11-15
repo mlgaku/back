@@ -64,8 +64,8 @@ func (u *User) Home() Value {
 	home := &userHome{}
 
 	home.User = u.db.FindByName(user.Name, M{"reg_ip": 0, "password": 0})
-	home.Topic = new(db.Topic).FindByAuthor(home.User.Id, M{"content": 0}, 0)
-	home.Reply = new(db.Reply).FindByAuthor(home.User.Id, nil, 0)
+	home.Topic = new(db.Topic).FindByAuthorDesc(home.User.Id, M{"content": 0}, 1, 20)
+	home.Reply = new(db.Reply).FindByAuthorDesc(home.User.Id, nil, 1, 20)
 
 	return &Succ{Data: home}
 }

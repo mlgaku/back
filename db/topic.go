@@ -93,8 +93,18 @@ func (t *Topic) Find(id bson.ObjectId) (topic *Topic) {
 }
 
 // 通过作者查找
-func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int) (topic []*Topic) {
-	err := t.C("topic").Find(M{"author": author}).Skip(page * 20).Limit(20).Select(field).All(&topic)
+func (t *Topic) FindByAuthor(author bson.ObjectId, field M, page int, num int) (topic []*Topic) {
+	err := t.C("topic").Find(M{"author": author}).Skip((page - 1) * num).Limit(num).Select(field).All(&topic)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return
+}
+
+// 通过作者查找(倒序)
+func (t *Topic) FindByAuthorDesc(author bson.ObjectId, field M, page int, num int) (topic []*Topic) {
+	err := t.C("topic").Find(M{"author": author}).Sort("-date").Skip((page - 1) * num).Limit(num).Select(field).All(&topic)
 	if err != nil {
 		panic(err.Error())
 	}
