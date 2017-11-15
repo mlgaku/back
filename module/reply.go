@@ -82,6 +82,7 @@ func (r *Reply) List() Value {
 	}
 
 	return &Succ{Data: M{
+		"per":   20,
 		"page":  s.Page,
 		"total": total,
 		"list":  r.db.Paginate(s.Topic, s.Page, 20),

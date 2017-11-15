@@ -139,7 +139,7 @@ func (t *Topic) Count(node bson.ObjectId) (c int) {
 // 分页查询
 func (t *Topic) Paginate(node bson.ObjectId, page int, num int) (topic []*Topic) {
 	if page < 1 {
-		panic("页码选择不正确")
+		return
 	}
 
 	line := []M{

@@ -86,6 +86,7 @@ func (t *Topic) List() Value {
 	}
 
 	return &Succ{Data: M{
+		"per":   20,
 		"page":  s.Page,
 		"total": math.Ceil(float64(t.db.Count(s.Node)) / 20),
 		"list":  t.db.Paginate(s.Node, s.Page, 20),

@@ -23,8 +23,9 @@ type Reply struct {
 }
 
 type ReplyUser struct {
-	Name   string `json:"name"`
-	Avatar bool   `json:"avatar,omitempty"`
+	Name     string `json:"name"`
+	Avatar   bool   `json:"avatar,omitempty"`
+	Identity uint64 `json:"identity,omitempty"`
 }
 
 // 获得 Reply 实例
@@ -84,7 +85,7 @@ func (r *Reply) FindByAuthor(author bson.ObjectId, field M, page int) (reply []*
 func (r *Reply) Paginate(topic bson.ObjectId, page int, num int) (reply []*Reply) {
 	switch true {
 	case page < 1:
-		panic("页码选择不正确")
+		return
 	case topic == "":
 		panic("主题ID不能为空")
 	}
@@ -95,7 +96,7 @@ func (r *Reply) Paginate(topic bson.ObjectId, page int, num int) (reply []*Reply
 		{"$limit": num},
 		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1}},
+		{"$project": M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1, "user.identity": 1}},
 	}
 
 	if err := r.C("reply").Pipe(line).All(&reply); err != nil {
