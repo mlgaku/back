@@ -21,7 +21,8 @@ var Middleware = map[string][]interface{}{
 	"topic.edit": {ShouldLogin, ShouldModerator},
 
 	// 回复
-	"reply.new": {ShouldLogin},
+	"reply.new":  {ShouldLogin},
+	"reply.edit": {ShouldLogin, ShouldModerator},
 
 	// 通知
 	"notice.list": {ShouldLogin},

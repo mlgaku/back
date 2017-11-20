@@ -66,6 +66,44 @@ func (r *Reply) New() Value {
 	return &Succ{}
 }
 
+// 编辑回复内容
+func (r *Reply) Edit() Value {
+	user := r.Di.Ses().Get("user").(*db.User)
+
+	reply := db.NewReply(r.Di.Req().Body, "b")
+	oldReply := reply.Find(reply.Id)
+
+	// 内容和原来一样
+	if reply.Content = strings.Trim(reply.Content, " "); reply.Content == oldReply.Content {
+		return &Succ{}
+	}
+
+	r.db.UpdateContent(reply.Id, reply.Content)
+
+	// 不是修改自己的回复时添加通知
+	if oldReply.Author != user.Id {
+		typ := 6
+		if reply.Content == "" { // 回复被删除
+			typ = 7
+		}
+
+		new(db.Notice).Add(&db.Notice{
+			Type:       uint64(typ),
+			Date:       time.Now(),
+			Master:     oldReply.Author,
+			User:       user.Name,
+			TopicID:    oldReply.Topic,
+			TopicTitle: new(db.Topic).Find(oldReply.Topic).Title,
+			ReplyID:    oldReply.Id,
+		})
+
+		r.Ps().Publish(&Prot{Mod: "notice", Act: "list"})
+	}
+
+	r.Ps().Publish(&Prot{Mod: "reply", Act: "list"})
+	return &Succ{}
+}
+
 // 获取回复列表
 func (r *Reply) List() Value {
 	var s struct {

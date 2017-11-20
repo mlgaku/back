@@ -14,11 +14,10 @@ type Reply struct {
 	Date   time.Time     `json:"date"`
 	Author bson.ObjectId `json:"author"`
 
-	Content string        `fill:"i" json:"content" validate:"required,min=5,max=300"`
 	Topic   bson.ObjectId `fill:"i" json:"topic,omitempty" validate:"required"`
+	Content string        `fill:"i" json:"content,omitempty" validate:"required,min=5,max=300"`
 
-	User ReplyUser `json:"user,omitempty" bson:",omitempty"`
-
+	User       ReplyUser `json:"user,omitempty" bson:",omitempty"`
 	service.Di `json:"-" bson:"-"`
 }
 
@@ -68,6 +67,44 @@ func (t *Reply) Count(topic bson.ObjectId) (c int) {
 		panic(err.Error())
 	}
 
+	return
+}
+
+// 更新回复内容
+func (r *Reply) UpdateContent(id bson.ObjectId, content string) {
+	if id == "" {
+		panic("回复ID不能为空")
+	}
+
+	content = strings.Trim(content, " ")
+	if content == "" {
+		if err := r.C("reply").UpdateId(id, M{"$unset": M{"content": 1}}); err != nil {
+			panic(err.Error())
+		}
+		return
+	}
+
+	if err := com.NewVali().Var(
+		content,
+		com.StructTag(r, "content", "validate"),
+	); err != "" {
+		panic(err)
+	}
+
+	if err := r.C("reply").UpdateId(id, M{"$set": M{"content": content}}); err != nil {
+		panic(err.Error())
+	}
+}
+
+// 通过ID查找
+func (r *Reply) Find(id bson.ObjectId) (reply *Reply) {
+	if id == "" {
+		panic("未指定回复ID")
+	}
+
+	if err := r.C("reply").FindId(id).One(&reply); err != nil {
+		panic("回复信息获取失败")
+	}
 	return
 }
 

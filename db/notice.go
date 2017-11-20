@@ -10,7 +10,7 @@ import (
 
 type Notice struct {
 	Id     bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Type   uint64        `json:"type" bson:",minsize"` // 类型(1.回复 2.At 3.修改主题 4.移动主题 5.修改&移动主题)
+	Type   uint64        `json:"type" bson:",minsize"` // 类型(1.回复 2.At 3.修改主题 4.移动主题 5.修改&移动主题 6.编辑回复 7.删除回复)
 	Read   bool          `json:"read,omitempty"`       // 已读
 	Date   time.Time     `json:"date,omitempty"`       // 日期
 	Master bson.ObjectId `json:"master,omitempty"`     // 所属者ID
