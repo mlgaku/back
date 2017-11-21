@@ -17,8 +17,9 @@ var Middleware = map[string][]interface{}{
 	"bill.list": {ShouldLogin},
 
 	// 主题
-	"topic.new":  {ShouldLogin},
-	"topic.edit": {ShouldLogin, ShouldModerator},
+	"topic.new":    {ShouldLogin},
+	"topic.edit":   {ShouldLogin, ShouldModerator},
+	"topic.subtle": {ShouldLogin},
 
 	// 回复
 	"reply.new":  {ShouldLogin},

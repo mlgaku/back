@@ -21,7 +21,8 @@ type Topic struct {
 	Title   string        `fill:"iu" json:"title" validate:"required,min=5,max=50"`
 	Content string        `fill:"iu" json:"content,omitempty" bson:",omitempty" validate:"omitempty,min=10,max=5000"`
 
-	User TopicUser `json:"user,omitempty" bson:",omitempty"`
+	User   TopicUser     `json:"user,omitempty" bson:",omitempty"`
+	Subtle []TopicSubtle `json:"subtle,omitempty" bson:",omitempty"`
 
 	service.Di `json:"-" bson:"-"`
 }
@@ -29,6 +30,11 @@ type Topic struct {
 type TopicUser struct {
 	Name   string `json:"name,omitempty"`
 	Avatar bool   `json:"avatar,omitempty"`
+}
+
+type TopicSubtle struct {
+	Date    time.Time `json:"date"`
+	Content string    `json:"content" validate:"min=10,max=300"`
 }
 
 // 获得 Topic 实例
@@ -62,6 +68,22 @@ func (t *Topic) Add(topic *Topic) bson.ObjectId {
 	}
 
 	return topic.Id
+}
+
+// 添加附言
+func (t *Topic) AddSubtle(topic bson.ObjectId, subtle *TopicSubtle) {
+	if topic == "" {
+		panic("主题ID不能为空")
+	}
+
+	if err := com.NewVali().Struct(subtle); err != "" {
+		panic(err)
+	}
+
+	subtle.Date = time.Now()
+	if err := t.C("topic").UpdateId(topic, M{"$push": M{"subtle": subtle}}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // 递增

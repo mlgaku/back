@@ -100,3 +100,19 @@ func (t *Topic) Info() Value {
 	t.db.Inc(topic.Id, "views")
 	return &Succ{Data: topic}
 }
+
+// 补充内容
+func (t *Topic) Subtle() Value {
+	m := map[string]string{}
+	if err := json.Unmarshal(t.Di.Req().Body, &m); err != nil {
+		return &Fail{Msg: err.Error()}
+	}
+
+	topic := bson.ObjectIdHex(m["topic"])
+	if t.db.Find(topic).Author != t.Di.Ses().Get("user").(*db.User).Id {
+		return &Fail{Msg: "你不能给别人的主题补充内容"}
+	}
+
+	t.db.AddSubtle(topic, &db.TopicSubtle{Content: m["content"]})
+	return &Succ{}
+}
