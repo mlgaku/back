@@ -24,6 +24,10 @@ type User struct {
 	Tagline string `fill:"u" json:"tagline,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30"`
 	Website string `fill:"u" json:"website,omitempty" bson:",omitempty" validate:"omitempty,min=3,max=30,url"`
 
+	Github   string `fill:"u" json:"github,omitempty" bson:",omitempty" validate:"omitempty,min=20,max=50"`
+	Twitter  string `fill:"u" json:"twitter,omitempty" bson:",omitempty" validate:"omitempty,min=20,max=50"`
+	Telegram string `fill:"u" json:"telegram,omitempty" bson:",omitempty" validate:"omitempty,min=15,max=40"`
+
 	service.Di `json:"-" bson:"-"`
 }
 
