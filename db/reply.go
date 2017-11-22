@@ -23,6 +23,7 @@ type Reply struct {
 
 type ReplyUser struct {
 	Name     string `json:"name"`
+	Email    string `json:"email,omitempty"`
 	Avatar   bool   `json:"avatar,omitempty"`
 	Identity uint64 `json:"identity,omitempty"`
 }
@@ -143,11 +144,19 @@ func (r *Reply) Paginate(topic bson.ObjectId, page int, num int) (reply []*Reply
 		{"$limit": num},
 		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1, "user.identity": 1}},
+		{"$project": M{"date": 1, "content": 1, "author": 1, "user.name": 1, "user.avatar": 1, "user.email": 1, "user.identity": 1}},
 	}
 
 	if err := r.C("reply").Pipe(line).All(&reply); err != nil {
 		panic(err.Error())
+	}
+
+	for _, x := range reply {
+		if x.User.Avatar {
+			x.User.Email = ""
+		} else {
+			x.User.Email = com.MD5(x.User.Email)
+		}
 	}
 
 	return

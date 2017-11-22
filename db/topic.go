@@ -29,6 +29,7 @@ type Topic struct {
 
 type TopicUser struct {
 	Name   string `json:"name,omitempty"`
+	Email  string `json:"email,omitempty"`
 	Avatar bool   `json:"avatar,omitempty"`
 }
 
@@ -180,7 +181,7 @@ func (t *Topic) Paginate(node bson.ObjectId, page int, num int) (topic []*Topic)
 		{"$sort": M{"date": -1}},
 		{"$lookup": M{"from": "user", "localField": "author", "foreignField": "_id", "as": "user"}},
 		{"$unwind": "$user"},
-		{"$project": M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.avatar": 1}},
+		{"$project": M{"date": 1, "title": 1, "node": 1, "author": 1, "views": 1, "replies": 1, "last_reply": 1, "user.name": 1, "user.email": 1, "user.avatar": 1}},
 	}
 
 	if node != "" {
@@ -191,6 +192,14 @@ func (t *Topic) Paginate(node bson.ObjectId, page int, num int) (topic []*Topic)
 
 	if err := t.C("topic").Pipe(line).All(&topic); err != nil {
 		panic(err.Error())
+	}
+
+	for _, x := range topic {
+		if x.User.Avatar {
+			x.User.Email = ""
+		} else {
+			x.User.Email = com.MD5(x.User.Email)
+		}
 	}
 
 	return

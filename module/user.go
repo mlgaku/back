@@ -67,6 +67,7 @@ func (u *User) Home() Value {
 	home.Topic = new(db.Topic).FindByAuthorDesc(home.User.Id, M{"content": 0}, 1, 20)
 	home.Reply = new(db.Reply).FindByAuthorDesc(home.User.Id, nil, 1, 20)
 
+	home.User.Email = com.MD5(home.User.Email)
 	return &Succ{Data: home}
 }
 
